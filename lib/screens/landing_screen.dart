@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../app/app_screen.dart';
 import '../app/app_state.dart';
 import '../app/app_theme.dart';
 import '../widgets/app_button.dart';
@@ -58,10 +57,7 @@ class LandingScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     AppButton(
                       size: AppButtonSize.lg,
-                      onPressed:
-                          () => appState.setCurrentScreen(
-                            AppScreen.onboardingStep1,
-                          ),
+                      onPressed: appState.startOnboardingFromScratch,
                       child: const Text('내 환급액 확인하기'),
                     ),
                     const SizedBox(height: 10),
@@ -137,10 +133,7 @@ class LandingScreen extends StatelessWidget {
                             AppButton(
                               variant: AppButtonVariant.secondary,
                               size: AppButtonSize.lg,
-                              onPressed:
-                                  () => appState.setCurrentScreen(
-                                    AppScreen.onboardingStep1,
-                                  ),
+                              onPressed: appState.startOnboardingFromScratch,
                               child: const Text('지금 시작하기'),
                             ),
                           ],

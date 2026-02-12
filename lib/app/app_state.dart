@@ -157,6 +157,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void startOnboardingFromScratch() {
+    unawaited(_storage.clearAllData());
+    _userProfile = UserProfile.defaults();
+    _taxData = TaxDeductionData.defaults();
+    _taxResult = null;
+    _onboardingComplete = false;
+    _currentScreen = AppScreen.onboardingStep1;
+    _routeSync.updateScreen(_currentScreen, replace: true);
+    unawaited(_storage.saveCurrentScreen(_currentScreen.name));
+    notifyListeners();
+  }
+
   void _recalculateIfReady() {
     if (!_onboardingComplete) return;
     _taxResult = TaxCalculator.calculateTotalTax(_userProfile, _taxData);
