@@ -93,6 +93,7 @@ class _WebAppRouteSync implements AppRouteSync {
 
   AppScreen? _screenFromRoute(String route) {
     switch (route) {
+      case '':
       case 'landing':
         return AppScreen.landing;
       case 'onboarding/1':
