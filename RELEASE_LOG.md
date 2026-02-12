@@ -4,6 +4,7 @@ Firebase Hosting 배포 이력을 기록합니다.
 
 | Deployed At (KST) | Commit | Project | URL | Notes |
 |---|---|---|---|---|
+| 2026-02-12 16:57:33 +09:00 | `95b1d5b` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 온보딩 단계별 URL/내비게이션 개선 버전 재배포 |
 | 2026-02-12 16:46:26 +09:00 | `d219ab9` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 해시 URL에서 경로 기반 URL(`/dashboard` 등)로 전환, 브라우저 뒤/앞으로 연동 강화 |
 | 2026-02-12 16:37:50 +09:00 | `f3ccdf1` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 브라우저 뒤로/앞으로 버튼과 앱 화면 동기화(해시 라우트 연동) |
 | 2026-02-12 16:09:44 +09:00 | `4bbe7af` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 온보딩 Step1에서도 이전 버튼 제공, 대시보드 Savvy 로고 클릭 시 랜딩 이동 |
