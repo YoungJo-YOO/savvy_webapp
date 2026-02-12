@@ -9,7 +9,7 @@ Future<void> main() async {
   final query = _resolveLaunchQuery();
   final userNamespace = query['user']?.trim();
   final hasUserNamespace = userNamespace != null && userNamespace.isNotEmpty;
-  final forceFreshStart = _toBool(query['fresh']) || !hasUserNamespace;
+  final forceFreshStart = _toBool(query['fresh']);
 
   final appState = AppState(
     storage: AppStorage(namespace: hasUserNamespace ? userNamespace : null),

@@ -3,14 +3,20 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import 'app_screen.dart';
+import 'route_sync.dart';
 import 'app_storage.dart';
 import 'models.dart';
 import 'tax_calculator.dart';
 
 class AppState extends ChangeNotifier {
-  AppState({AppStorage? storage}) : _storage = storage ?? AppStorage();
+  AppState({AppStorage? storage, AppRouteSync? routeSync})
+      : _storage = storage ?? AppStorage(),
+        _routeSync = routeSync ?? createAppRouteSync() {
+    _routeSync.listen(_handleRouteChangedFromBrowser);
+  }
 
   final AppStorage _storage;
+  final AppRouteSync _routeSync;
 
   UserProfile _userProfile = UserProfile.defaults();
   TaxDeductionData _taxData = TaxDeductionData.defaults();
@@ -18,6 +24,7 @@ class AppState extends ChangeNotifier {
   bool _onboardingComplete = false;
   AppScreen _currentScreen = AppScreen.landing;
   bool _initialized = false;
+  bool _isHandlingExternalRoute = false;
 
   UserProfile get userProfile => _userProfile;
   TaxDeductionData get taxData => _taxData;
@@ -36,6 +43,8 @@ class AppState extends ChangeNotifier {
       _taxResult = null;
       _onboardingComplete = false;
       _currentScreen = AppScreen.landing;
+      unawaited(_storage.saveCurrentScreen(_currentScreen.name));
+      _routeSync.updateScreen(_currentScreen, replace: true);
       _initialized = true;
       notifyListeners();
       return;
@@ -44,6 +53,10 @@ class AppState extends ChangeNotifier {
     final savedProfile = await _storage.loadUserProfile();
     final savedTaxData = await _storage.loadTaxData();
     final savedOnboardingComplete = await _storage.loadOnboardingComplete();
+    final savedScreenName = await _storage.loadCurrentScreen();
+    final savedScreen = _screenFromName(savedScreenName);
+    final routeScreen = _routeSync.readInitialScreen();
+    final preferredScreen = routeScreen ?? savedScreen;
 
     if (savedProfile != null) {
       _userProfile = savedProfile;
@@ -54,16 +67,31 @@ class AppState extends ChangeNotifier {
 
     _onboardingComplete = savedOnboardingComplete;
     if (_onboardingComplete) {
-      _currentScreen = AppScreen.dashboard;
       _taxResult = TaxCalculator.calculateTotalTax(_userProfile, _taxData);
+      _currentScreen = _resolveInitialScreen(
+        preferredScreen,
+        onboardingComplete: true,
+      );
+    } else {
+      _currentScreen = _resolveInitialScreen(
+        preferredScreen,
+        onboardingComplete: false,
+      );
     }
+    unawaited(_storage.saveCurrentScreen(_currentScreen.name));
+    _routeSync.updateScreen(_currentScreen, replace: true);
 
     _initialized = true;
     notifyListeners();
   }
 
   void setCurrentScreen(AppScreen screen) {
+    if (_currentScreen == screen) return;
     _currentScreen = screen;
+    if (!_isHandlingExternalRoute) {
+      _routeSync.updateScreen(screen);
+    }
+    unawaited(_storage.saveCurrentScreen(screen.name));
     notifyListeners();
   }
 
@@ -106,6 +134,8 @@ class AppState extends ChangeNotifier {
       _taxResult = null;
       _currentScreen = AppScreen.landing;
     }
+    _routeSync.updateScreen(_currentScreen, replace: true);
+    unawaited(_storage.saveCurrentScreen(_currentScreen.name));
     notifyListeners();
   }
 
@@ -122,11 +152,61 @@ class AppState extends ChangeNotifier {
     _taxResult = null;
     _onboardingComplete = false;
     _currentScreen = AppScreen.landing;
+    _routeSync.updateScreen(_currentScreen, replace: true);
+    unawaited(_storage.saveCurrentScreen(_currentScreen.name));
     notifyListeners();
   }
 
   void _recalculateIfReady() {
     if (!_onboardingComplete) return;
     _taxResult = TaxCalculator.calculateTotalTax(_userProfile, _taxData);
+  }
+
+  AppScreen _resolveInitialScreen(
+    AppScreen? savedScreen, {
+    required bool onboardingComplete,
+  }) {
+    if (savedScreen == null) {
+      return onboardingComplete ? AppScreen.dashboard : AppScreen.landing;
+    }
+
+    if (!onboardingComplete) {
+      if (savedScreen == AppScreen.landing || savedScreen == AppScreen.onboarding) {
+        return savedScreen;
+      }
+      return AppScreen.landing;
+    }
+
+    return savedScreen;
+  }
+
+  AppScreen? _screenFromName(String? name) {
+    if (name == null || name.isEmpty) return null;
+    for (final screen in AppScreen.values) {
+      if (screen.name == name) return screen;
+    }
+    return null;
+  }
+
+  void _handleRouteChangedFromBrowser(AppScreen screen) {
+    if (!_initialized) return;
+    final resolved = _resolveInitialScreen(
+      screen,
+      onboardingComplete: _onboardingComplete,
+    );
+    if (resolved == _currentScreen) return;
+
+    _isHandlingExternalRoute = true;
+    _currentScreen = resolved;
+    _isHandlingExternalRoute = false;
+
+    unawaited(_storage.saveCurrentScreen(_currentScreen.name));
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _routeSync.dispose();
+    super.dispose();
   }
 }

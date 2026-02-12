@@ -11,6 +11,7 @@ class AppStorage {
   static const String _userProfileBaseKey = 'savvy_user_profile';
   static const String _taxDataBaseKey = 'savvy_tax_data';
   static const String _onboardingCompleteBaseKey = 'savvy_onboarding_complete';
+  static const String _currentScreenBaseKey = 'savvy_current_screen';
   static const String _lastUpdatedBaseKey = 'savvy_last_updated';
 
   final String? _namespace;
@@ -19,6 +20,7 @@ class AppStorage {
   String get _taxDataKey => _prefixedKey(_taxDataBaseKey);
   String get _onboardingCompleteKey =>
       _prefixedKey(_onboardingCompleteBaseKey);
+  String get _currentScreenKey => _prefixedKey(_currentScreenBaseKey);
   String get _lastUpdatedKey => _prefixedKey(_lastUpdatedBaseKey);
 
   Future<SharedPreferences> get _prefs async =>
@@ -55,11 +57,25 @@ class AppStorage {
     return prefs.getBool(_onboardingCompleteKey) ?? false;
   }
 
+  Future<void> saveCurrentScreen(String screenName) async {
+    final prefs = await _prefs;
+    await prefs.setString(_currentScreenKey, screenName);
+    await prefs.setString(_lastUpdatedKey, DateTime.now().toIso8601String());
+  }
+
+  Future<String?> loadCurrentScreen() async {
+    final prefs = await _prefs;
+    final value = prefs.getString(_currentScreenKey);
+    if (value == null || value.isEmpty) return null;
+    return value;
+  }
+
   Future<void> clearAllData() async {
     final prefs = await _prefs;
     await prefs.remove(_userProfileKey);
     await prefs.remove(_taxDataKey);
     await prefs.remove(_onboardingCompleteKey);
+    await prefs.remove(_currentScreenKey);
     await prefs.remove(_lastUpdatedKey);
   }
 
