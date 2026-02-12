@@ -280,6 +280,23 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
           '기준 금액: ${TaxCalculator.formatCurrency(minimum)}',
           style: Theme.of(context).textTheme.bodySmall,
         ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: progress >= 1 ? AppTheme.primaryLight : const Color(0xFFFFF3CD),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            progress >= 1
+                ? '기준을 충족했습니다. 이후 지출은 체크카드/현금영수증 위주가 공제율에 유리합니다.'
+                : '아직 기준 금액이 남아 있어요. 먼저 문턱을 넘겨야 카드 공제가 적용됩니다.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+          ),
+        ),
         const SizedBox(height: 16),
         LabeledInput(
           label: '신용카드 사용액',
@@ -313,6 +330,7 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
       widget.appState.userProfile,
     );
     final rate = annualIncome <= 55000000 ? 16.5 : 13.2;
+    final totalPension = _won(_pensionController) + _won(_irpController);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -340,6 +358,23 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
           helperText: '연금저축 포함 최대 700만원',
           onChanged: (_) => setState(() {}),
         ),
+        if (totalPension >= 7000000) ...<Widget>[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '이미 연금 세액공제 한도(700만원)에 도달했어요. 추가 납입분은 공제 효과가 제한될 수 있습니다.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -384,6 +419,7 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
   }
 
   Widget _buildHousingEditor(BuildContext context) {
+    final housingAmount = _won(_housingController);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -403,6 +439,23 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
           helperText: '최대 240만원, 40% 소득공제',
           onChanged: (_) => setState(() {}),
         ),
+        if (housingAmount >= 2400000) ...<Widget>[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '주택청약 소득공제 한도(240만원)에 도달했습니다.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -476,6 +529,21 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
     final taxData = widget.appState.taxData;
     switch (widget.itemId) {
       case 'card':
+        final effectiveAnnualIncome = TaxCalculator.totalAnnualIncome(
+          widget.appState.userProfile,
+        );
+        final totalUsage =
+            _won(_creditCardController) +
+            _won(_debitCardController) +
+            _won(_cashController);
+        if (totalUsage > effectiveAnnualIncome * 2) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('총급여 대비 카드 사용액이 비정상적으로 높습니다. 입력값을 확인해 주세요.'),
+            ),
+          );
+          return;
+        }
         widget.appState.updateTaxData(
           cardUsage: taxData.cardUsage.copyWith(
             creditCard: _won(_creditCardController),

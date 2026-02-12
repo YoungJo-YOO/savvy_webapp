@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../app/app_state.dart';
 import '../app/app_theme.dart';
 import '../app/models.dart';
+import '../app/tax_calculator.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_card.dart';
 import '../widgets/labeled_input.dart';
@@ -39,6 +42,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late final TextEditingController _previousPrepaidTaxController;
   late final TextEditingController _religiousDonationController;
   late final TextEditingController _rentController;
+
+  bool get _isSMEAgeEligible => _age >= 15 && _age <= 34;
 
   @override
   void initState() {
@@ -227,6 +232,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           helperText: '현재 회사 연봉 기준으로 입력되며, 급여 수령 개월 수로 자동 환산됩니다.',
           onChanged: (value) => _annualIncomeManwon = int.tryParse(value) ?? 0,
         ),
+        if (_annualIncomeManwon > 0 &&
+            (_annualIncomeManwon * (_paidSalaryMonthCount / 12.0)) <= 1400) ...<Widget>[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              '현재 입력 기준으로 결정세액이 0원에 가까울 수 있습니다. '
+              '추가 절세 소비보다 입력 정확도를 먼저 확인해 주세요.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         Text(
           '부양가족 수',
@@ -435,6 +459,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildStepSpecial() {
+    final smeDescription =
+        _isSMEAgeEligible
+            ? '만 15~34세 중소기업 근로자'
+            : '만 15~34세에만 해당되어 현재는 선택할 수 없습니다.';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -449,8 +477,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         const SizedBox(height: 14),
         _checkboxTile(
           label: '중소기업 청년 소득세 감면 대상',
-          description: '만 15~34세 중소기업 근로자',
+          description: smeDescription,
           value: _specialSituations.isSMEYouthTaxReduction,
+          enabled: _isSMEAgeEligible,
           onChanged: (value) {
             setState(() {
               _specialSituations = _specialSituations.copyWith(
@@ -552,14 +581,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildStepResult() {
-    final chips = <String>[
-      if (_specialSituations.isSMEYouthTaxReduction && _age <= 34)
-        '중소기업 청년 소득세 감면 (90%)',
-      '신용/체크카드 소득공제',
-      '연금저축 세액공제',
-      if (_specialSituations.hasReligiousDonation) '종교단체 기부금 세액공제',
-      '주택청약/월세 반영',
-    ];
+    final recommendations = _buildRecommendations();
+    final topRecommendation =
+        recommendations.isEmpty ? null : recommendations.first;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -602,43 +626,90 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             borderRadius: BorderRadius.circular(14),
           ),
-          child: const Column(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('예상 환급액', style: TextStyle(color: Colors.white70)),
-              SizedBox(height: 6),
+              const Text('우선순위 분석', style: TextStyle(color: Colors.white70)),
+              const SizedBox(height: 6),
               Text(
-                '계산 준비 완료',
-                style: TextStyle(
+                topRecommendation == null ? '추천 항목 없음' : topRecommendation.title,
+                style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 34,
+                  fontSize: 30,
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              if (topRecommendation != null) ...<Widget>[
+                const SizedBox(height: 4),
+                Text(
+                  topRecommendation.description,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
             ],
           ),
         ),
         const SizedBox(height: 18),
-        Text('적용 가능한 공제 항목', style: Theme.of(context).textTheme.titleMedium),
+        Text('우선순위 추천 항목', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 10),
-        ...chips.map((item) {
+        ...recommendations.asMap().entries.map((entry) {
+          final rank = entry.key + 1;
+          final item = entry.value;
           return Container(
             width: double.infinity,
             margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             decoration: BoxDecoration(
               color: AppTheme.primaryLight,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(
-                  Icons.check_circle,
-                  color: AppTheme.primary,
-                  size: 18,
+                Row(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                      child: Text(
+                        '우선순위 $rank',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '점수 ${item.priority}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.textMuted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Expanded(child: Text(item)),
+                const SizedBox(height: 8),
+                Text(
+                  item.title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.description,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+                ),
               ],
             ),
           );
@@ -651,6 +722,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     required String label,
     String? description,
     required bool value,
+    bool enabled = true,
     required ValueChanged<bool> onChanged,
   }) {
     return Container(
@@ -662,14 +734,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       ),
       child: CheckboxListTile(
         value: value,
-        onChanged: (checked) => onChanged(checked ?? false),
-        title: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        onChanged: enabled ? (checked) => onChanged(checked ?? false) : null,
+        title: Text(
+          label,
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: enabled ? AppTheme.textPrimary : AppTheme.textMuted,
+          ),
+        ),
         subtitle:
             description == null
                 ? null
                 : Text(
                   description,
-                  style: const TextStyle(color: AppTheme.textMuted),
+                  style: TextStyle(
+                    color: enabled ? AppTheme.textMuted : AppTheme.warning,
+                  ),
                 ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         dense: true,
@@ -700,6 +780,89 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int get _paidSalaryMonthCount =>
       _salaryPaidMonths.where((paid) => paid).length;
 
+  List<_RecommendationItem> _buildRecommendations() {
+    final currentCompanyIncome =
+        _annualIncomeManwon * 10000.0 * (_paidSalaryMonthCount / 12.0);
+    final hasPreviousCompany = _isMidYearJoiner && !_isFirstJobThisYear;
+    final previousIncome =
+        hasPreviousCompany ? _previousCompanyIncomeManwon * 10000.0 : 0.0;
+    final effectiveAnnualIncome = math.max(
+      currentCompanyIncome + previousIncome,
+      0.0,
+    );
+    final cardUsage = widget.appState.taxData.cardUsage;
+    final currentCardUsage =
+        cardUsage.creditCard + cardUsage.debitCard + cardUsage.cashReceipt;
+    final cardThreshold = effectiveAnnualIncome * 0.25;
+    final cardGap = math.max(cardThreshold - currentCardUsage, 0.0);
+    final pensionTotal =
+        widget.appState.taxData.pension.pensionSavings +
+        widget.appState.taxData.pension.irp;
+    final pensionRemaining = math.max(7000000.0 - pensionTotal, 0.0);
+    final monthlyDonation =
+        (double.tryParse(_religiousDonationController.text.trim()) ?? 0) * 10000;
+    final annualDonation =
+        _specialSituations.hasReligiousDonation
+            ? monthlyDonation * _paidSalaryMonthCount
+            : 0.0;
+    final monthlyRent =
+        (double.tryParse(_rentController.text.trim()) ?? 0) * 10000;
+    final annualRent =
+        _specialSituations.hasRent ? monthlyRent * _paidSalaryMonthCount : 0.0;
+
+    final items = <_RecommendationItem>[
+      if (_specialSituations.isSMEYouthTaxReduction && _isSMEAgeEligible)
+        const _RecommendationItem(
+          title: '중소기업 청년 소득세 감면',
+          description: '산출세액의 90% 감면이 적용되며 자동 반영됩니다.',
+          priority: 100,
+        ),
+      _RecommendationItem(
+        title: '신용/체크카드 소득공제',
+        description:
+            cardGap > 0
+                ? '공제 문턱까지 ${TaxCalculator.formatCurrency(cardGap)} 남았습니다. '
+                    '체크카드 사용을 우선 추천합니다.'
+                : '공제 문턱을 이미 충족했습니다. 남은 지출은 체크카드/현금영수증 위주가 유리합니다.',
+        priority: cardGap > 0 ? 90 : 70,
+      ),
+      _RecommendationItem(
+        title: '연금저축 세액공제',
+        description:
+            pensionRemaining > 0
+                ? '연금/IRP 한도까지 ${TaxCalculator.formatCurrency(pensionRemaining)} 추가 납입 여지가 있습니다.'
+                : '연금저축 공제 한도를 이미 충분히 활용하고 있습니다.',
+        priority: pensionRemaining > 0 ? 88 : 55,
+      ),
+      if (_specialSituations.hasReligiousDonation)
+        _RecommendationItem(
+          title: '종교단체 기부금 세액공제',
+          description:
+              '현재 입력 기준 연간 기부액은 ${TaxCalculator.formatCurrency(annualDonation)}입니다.',
+          priority: annualDonation > 0 ? 78 : 58,
+        ),
+      _RecommendationItem(
+        title: '주택청약/월세 반영',
+        description:
+            annualRent > 0
+                ? '월세 입력액 ${TaxCalculator.formatCurrency(annualRent)}이 공제 계산에 반영됩니다.'
+                : '주택청약/월세 항목은 공제 효과가 큰 편이므로 해당 여부를 확인하세요.',
+        priority: annualRent > 0 ? 75 : 62,
+      ),
+      if (_specialSituations.hasChildren ||
+          _specialSituations.hasDisabledDependent ||
+          _specialSituations.hasElderlyDependent)
+        const _RecommendationItem(
+          title: '인적공제 대상 확인',
+          description: '부양가족 정보에 따라 인적공제가 반영되므로 입력값을 다시 확인해 주세요.',
+          priority: 74,
+        ),
+    ];
+
+    items.sort((a, b) => b.priority.compareTo(a.priority));
+    return items.take(8).toList();
+  }
+
   void _applyEmploymentStartMonth(int startMonth) {
     _salaryPaidMonths = List<bool>.generate(
       12,
@@ -716,6 +879,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         int.tryParse(_previousPrepaidTaxController.text.trim()) ?? 0;
 
     if (_step == 1) {
+      if (_age < 19 || _age > 65) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('나이는 19세 이상 65세 이하로 입력해 주세요.')),
+        );
+        return;
+      }
       if (_age <= 0 || _annualIncomeManwon <= 0) {
         ScaffoldMessenger.of(
           context,
@@ -744,6 +913,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
         return;
       }
+    }
+
+    if (_step == 2 && !_isSMEAgeEligible) {
+      _specialSituations = _specialSituations.copyWith(
+        isSMEYouthTaxReduction: false,
+      );
     }
 
     if (_step < _totalSteps) {
@@ -816,4 +991,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _previousIncomeController.clear();
     _previousPrepaidTaxController.clear();
   }
+}
+
+class _RecommendationItem {
+  const _RecommendationItem({
+    required this.title,
+    required this.description,
+    required this.priority,
+  });
+
+  final String title;
+  final String description;
+  final int priority;
 }
