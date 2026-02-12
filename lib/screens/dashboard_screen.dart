@@ -372,11 +372,21 @@ class _DashboardNav extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: <Widget>[
-                Text(
-                  'Savvy',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(color: AppTheme.primary),
+                InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => onTap(AppScreen.landing),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      'Savvy',
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(color: AppTheme.primary),
+                    ),
+                  ),
                 ),
                 const Spacer(),
                 _NavItem(

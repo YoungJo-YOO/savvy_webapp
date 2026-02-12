@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../app/app_screen.dart';
 import '../app/app_state.dart';
 import '../app/app_theme.dart';
 import '../app/models.dart';
@@ -169,13 +170,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const SizedBox(height: 14),
                     Row(
                       children: <Widget>[
-                        if (_step > 1)
-                          AppButton(
-                            variant: AppButtonVariant.outline,
-                            onPressed: () => setState(() => _step -= 1),
-                            child: const Text('이전'),
-                          ),
-                        if (_step > 1) const SizedBox(width: 10),
+                        AppButton(
+                          variant: AppButtonVariant.outline,
+                          onPressed: _handlePrevious,
+                          child: const Text('이전'),
+                        ),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: AppButton(
                             fullWidth: true,
@@ -868,6 +868,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       12,
       (index) => index >= startMonth - 1,
     );
+  }
+
+  void _handlePrevious() {
+    if (_step > 1) {
+      setState(() => _step -= 1);
+      return;
+    }
+
+    if (widget.appState.onboardingComplete) {
+      widget.appState.setCurrentScreen(AppScreen.dashboard);
+      return;
+    }
+
+    widget.appState.setCurrentScreen(AppScreen.landing);
   }
 
   void _handleNext() {
