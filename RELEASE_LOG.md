@@ -4,6 +4,7 @@ Firebase Hosting 배포 이력을 기록합니다.
 
 | Deployed At (KST) | Commit | Project | URL | Notes |
 |---|---|---|---|---|
+| 2026-02-13 08:59:15 +09:00 | `c50c5ba` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 뒤로/앞으로 시 해시 라우트를 우선 해석해 landing으로 튀는 현상 개선 |
 | 2026-02-13 08:47:48 +09:00 | `bf6ee66` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 결정세액 하한 0원 적용, 관련 안내 문구 및 테스트/리포트 반영, landing 경로 fresh-start 해제 |
 | 2026-02-13 08:18:04 +09:00 | `1c85e78` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 브라우저 일반 히스토리 방식(push/replace/popstate 정합)으로 뒤로/앞으로 동작 개선 |
 | 2026-02-12 16:57:33 +09:00 | `95b1d5b` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 온보딩 단계별 URL/내비게이션 개선 버전 재배포 |
