@@ -130,13 +130,11 @@ class AppState extends ChangeNotifier {
     if (complete) {
       _currentScreen = AppScreen.dashboard;
       _taxResult = TaxCalculator.calculateTotalTax(_userProfile, _taxData);
-      // User-driven completion should keep a natural browser history step.
-      _routeSync.updateScreen(_currentScreen);
     } else {
       _taxResult = null;
       _currentScreen = AppScreen.landing;
-      _routeSync.updateScreen(_currentScreen, replace: true);
     }
+    _routeSync.updateScreen(_currentScreen, replace: true);
     unawaited(_storage.saveCurrentScreen(_currentScreen.name));
     notifyListeners();
   }
@@ -166,8 +164,7 @@ class AppState extends ChangeNotifier {
     _taxResult = null;
     _onboardingComplete = false;
     _currentScreen = AppScreen.onboardingStep1;
-    // Keep landing -> onboarding as a back/forward-friendly transition.
-    _routeSync.updateScreen(_currentScreen);
+    _routeSync.updateScreen(_currentScreen, replace: true);
     unawaited(_storage.saveCurrentScreen(_currentScreen.name));
     notifyListeners();
   }
@@ -212,11 +209,6 @@ class AppState extends ChangeNotifier {
       screen,
       onboardingComplete: _onboardingComplete,
     );
-
-    // If route is not allowed in current state, normalize URL to resolved screen.
-    if (resolved != screen) {
-      _routeSync.updateScreen(resolved, replace: true);
-    }
     if (resolved == _currentScreen) return;
 
     _isHandlingExternalRoute = true;
