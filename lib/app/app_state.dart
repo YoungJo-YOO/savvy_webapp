@@ -26,8 +26,20 @@ class AppState extends ChangeNotifier {
   AppScreen get currentScreen => _currentScreen;
   bool get isInitialized => _initialized;
 
-  Future<void> initialize() async {
+  Future<void> initialize({bool forceFreshStart = false}) async {
     if (_initialized) return;
+
+    if (forceFreshStart) {
+      await _storage.clearAllData();
+      _userProfile = UserProfile.defaults();
+      _taxData = TaxDeductionData.defaults();
+      _taxResult = null;
+      _onboardingComplete = false;
+      _currentScreen = AppScreen.landing;
+      _initialized = true;
+      notifyListeners();
+      return;
+    }
 
     final savedProfile = await _storage.loadUserProfile();
     final savedTaxData = await _storage.loadTaxData();

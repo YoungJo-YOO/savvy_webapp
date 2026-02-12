@@ -5,10 +5,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models.dart';
 
 class AppStorage {
-  static const String _userProfileKey = 'savvy_user_profile';
-  static const String _taxDataKey = 'savvy_tax_data';
-  static const String _onboardingCompleteKey = 'savvy_onboarding_complete';
-  static const String _lastUpdatedKey = 'savvy_last_updated';
+  AppStorage({String? namespace})
+    : _namespace = _sanitizeNamespace(namespace);
+
+  static const String _userProfileBaseKey = 'savvy_user_profile';
+  static const String _taxDataBaseKey = 'savvy_tax_data';
+  static const String _onboardingCompleteBaseKey = 'savvy_onboarding_complete';
+  static const String _lastUpdatedBaseKey = 'savvy_last_updated';
+
+  final String? _namespace;
+
+  String get _userProfileKey => _prefixedKey(_userProfileBaseKey);
+  String get _taxDataKey => _prefixedKey(_taxDataBaseKey);
+  String get _onboardingCompleteKey =>
+      _prefixedKey(_onboardingCompleteBaseKey);
+  String get _lastUpdatedKey => _prefixedKey(_lastUpdatedBaseKey);
 
   Future<SharedPreferences> get _prefs async =>
       SharedPreferences.getInstance();
@@ -75,5 +86,18 @@ class AppStorage {
     } catch (_) {
       return null;
     }
+  }
+
+  String _prefixedKey(String baseKey) {
+    if (_namespace == null || _namespace == '') return baseKey;
+    return '${_namespace}_$baseKey';
+  }
+
+  static String? _sanitizeNamespace(String? raw) {
+    if (raw == null) return null;
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    final safe = trimmed.replaceAll(RegExp(r'[^a-zA-Z0-9_-]'), '_');
+    return safe.isEmpty ? null : safe;
   }
 }
