@@ -231,7 +231,7 @@ class TaxCalculator {
       total: totalTaxCredit,
     );
 
-    final finalTax = calculatedTax - taxDeductions.total;
+    final finalTax = math.max(calculatedTax - taxDeductions.total, 0.0);
     final currentCompanyPrepaidTax = currentCompanyIncome(profile) * 0.05;
     final previousCompanyPrepaidTax =
         profile.isFirstJobThisYear ? 0.0 : profile.previousCompanyPrepaidTax;

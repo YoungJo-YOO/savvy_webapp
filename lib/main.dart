@@ -9,7 +9,7 @@ Future<void> main() async {
   final query = _resolveLaunchQuery();
   final userNamespace = query['user']?.trim();
   final hasUserNamespace = userNamespace != null && userNamespace.isNotEmpty;
-  final forceFreshStart = _toBool(query['fresh']) || _isLandingLaunchRoute();
+  final forceFreshStart = _toBool(query['fresh']);
 
   final appState = AppState(
     storage: AppStorage(namespace: hasUserNamespace ? userNamespace : null),
@@ -45,30 +45,4 @@ bool _toBool(String? value) {
     default:
       return false;
   }
-}
-
-bool _isLandingLaunchRoute() {
-  final directPath = _normalizeRoutePath(Uri.base.path);
-  if (directPath == 'landing') return true;
-
-  final fragment = Uri.base.fragment;
-  if (fragment.isEmpty) return false;
-
-  final hashPath = _normalizeRoutePath(fragment.split('?').first);
-  return hashPath == 'landing';
-}
-
-String _normalizeRoutePath(String rawPath) {
-  if (rawPath.isEmpty) return '';
-  var path = rawPath.trim();
-  if (path.startsWith('#')) {
-    path = path.substring(1);
-  }
-  if (path.startsWith('/')) {
-    path = path.substring(1);
-  }
-  if (path.endsWith('/')) {
-    path = path.substring(0, path.length - 1);
-  }
-  return path;
 }

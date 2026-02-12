@@ -229,6 +229,14 @@ class ReportPdfService {
                 formatMoney,
               ),
               _calcLine('결정세액', result.finalTax, formatMoney),
+              if (result.finalTax <= 0)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(bottom: 4),
+                  child: pw.Text(
+                    '※ 결정세액은 최소 0원으로 처리됩니다.',
+                    style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
+                ),
               _calcLine(
                 '기납부세액(추정)',
                 -result.prepaidTax,

@@ -159,7 +159,7 @@ class DashboardScreen extends StatelessWidget {
                                 if (taxResult.finalTax <= 0) ...<Widget>[
                                   const SizedBox(height: 8),
                                   Text(
-                                    '결정세액이 0원 이하로 계산되었습니다.',
+                                    '결정세액은 최소 0원으로 처리됩니다. 공제액이 산출세액보다 커도 결정세액은 음수가 되지 않습니다.',
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(color: AppTheme.textMuted),
                                     textAlign: TextAlign.center,

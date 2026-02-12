@@ -155,7 +155,7 @@ void main() {
   });
 
   group('부호(최종세액/환급액) 처리', () {
-    test('세액공제가 산출세액을 초과하면 최종세액이 음수가 될 수 있다', () {
+    test('세액공제가 산출세액을 초과해도 결정세액은 0원 미만으로 내려가지 않는다', () {
       final profile = _profile(annualIncome: 42000000);
       final data = TaxDeductionData.defaults().copyWith(
         pension: const Pension(pensionSavings: 7000000, irp: 0),
@@ -164,12 +164,12 @@ void main() {
 
       final result = TaxCalculator.calculateTotalTax(profile, data);
 
-      expect(result.finalTax, lessThan(0));
+      expect(result.finalTax, 0);
       expect(
         result.refundAmount,
         closeTo(result.prepaidTax - result.finalTax, 0.001),
       );
-      expect(result.refundAmount, greaterThan(result.prepaidTax));
+      expect(result.refundAmount, closeTo(result.prepaidTax, 0.001));
     });
 
     test('최종세액이 기납부세액보다 크면 추가 납부(환급액 음수)가 된다', () {
