@@ -95,8 +95,13 @@ class _WebAppRouteSync implements AppRouteSync {
     switch (route) {
       case 'landing':
         return AppScreen.landing;
+      case 'onboarding/1':
       case 'onboarding':
-        return AppScreen.onboarding;
+        return AppScreen.onboardingStep1;
+      case 'onboarding/2':
+        return AppScreen.onboardingStep2;
+      case 'onboarding/3':
+        return AppScreen.onboardingStep3;
       case 'dashboard':
         return AppScreen.dashboard;
       case 'card-analysis':
@@ -114,8 +119,12 @@ class _WebAppRouteSync implements AppRouteSync {
     switch (screen) {
       case AppScreen.landing:
         return 'landing';
-      case AppScreen.onboarding:
-        return 'onboarding';
+      case AppScreen.onboardingStep1:
+        return 'onboarding/1';
+      case AppScreen.onboardingStep2:
+        return 'onboarding/2';
+      case AppScreen.onboardingStep3:
+        return 'onboarding/3';
       case AppScreen.dashboard:
         return 'dashboard';
       case AppScreen.cardAnalysis:

@@ -171,7 +171,10 @@ class AppState extends ChangeNotifier {
     }
 
     if (!onboardingComplete) {
-      if (savedScreen == AppScreen.landing || savedScreen == AppScreen.onboarding) {
+      if (savedScreen == AppScreen.landing ||
+          savedScreen == AppScreen.onboardingStep1 ||
+          savedScreen == AppScreen.onboardingStep2 ||
+          savedScreen == AppScreen.onboardingStep3) {
         return savedScreen;
       }
       return AppScreen.landing;

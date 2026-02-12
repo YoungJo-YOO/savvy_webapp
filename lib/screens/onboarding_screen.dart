@@ -23,7 +23,6 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  int _step = 1;
   static const int _totalSteps = 3;
 
   late int _age;
@@ -45,6 +44,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late final TextEditingController _rentController;
 
   bool get _isSMEAgeEligible => _age >= 15 && _age <= 34;
+  int get _step => switch (widget.appState.currentScreen) {
+    AppScreen.onboardingStep2 => 2,
+    AppScreen.onboardingStep3 => 3,
+    _ => 1,
+  };
 
   @override
   void initState() {
@@ -872,7 +876,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   void _handlePrevious() {
     if (_step > 1) {
-      setState(() => _step -= 1);
+      _goToStep(_step - 1);
       return;
     }
 
@@ -936,7 +940,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     if (_step < _totalSteps) {
-      setState(() => _step += 1);
+      _goToStep(_step + 1);
       return;
     }
 
@@ -997,6 +1001,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
 
     widget.appState.setOnboardingComplete(true);
+  }
+
+  void _goToStep(int step) {
+    switch (step) {
+      case 1:
+        widget.appState.setCurrentScreen(AppScreen.onboardingStep1);
+        return;
+      case 2:
+        widget.appState.setCurrentScreen(AppScreen.onboardingStep2);
+        return;
+      case 3:
+        widget.appState.setCurrentScreen(AppScreen.onboardingStep3);
+        return;
+      default:
+        widget.appState.setCurrentScreen(AppScreen.onboardingStep1);
+        return;
+    }
   }
 
   void _resetPreviousCompanyInputs() {

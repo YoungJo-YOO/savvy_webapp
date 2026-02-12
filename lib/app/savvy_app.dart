@@ -36,7 +36,9 @@ class SavvyApp extends StatelessWidget {
           switch (appState.currentScreen) {
             case AppScreen.landing:
               return LandingScreen(appState: appState);
-            case AppScreen.onboarding:
+            case AppScreen.onboardingStep1:
+            case AppScreen.onboardingStep2:
+            case AppScreen.onboardingStep3:
               return OnboardingScreen(appState: appState);
             case AppScreen.dashboard:
               return DashboardScreen(appState: appState);

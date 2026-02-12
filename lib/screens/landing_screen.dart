@@ -58,7 +58,10 @@ class LandingScreen extends StatelessWidget {
                     const SizedBox(height: 28),
                     AppButton(
                       size: AppButtonSize.lg,
-                      onPressed: () => appState.setCurrentScreen(AppScreen.onboarding),
+                      onPressed:
+                          () => appState.setCurrentScreen(
+                            AppScreen.onboardingStep1,
+                          ),
                       child: const Text('내 환급액 확인하기'),
                     ),
                     const SizedBox(height: 10),
@@ -134,7 +137,10 @@ class LandingScreen extends StatelessWidget {
                             AppButton(
                               variant: AppButtonVariant.secondary,
                               size: AppButtonSize.lg,
-                              onPressed: () => appState.setCurrentScreen(AppScreen.onboarding),
+                              onPressed:
+                                  () => appState.setCurrentScreen(
+                                    AppScreen.onboardingStep1,
+                                  ),
                               child: const Text('지금 시작하기'),
                             ),
                           ],

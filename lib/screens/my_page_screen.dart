@@ -180,7 +180,7 @@ class MyPageScreen extends StatelessWidget {
                             subtitle: '나이, 연봉, 부양가족 정보 변경',
                             onTap:
                                 () => appState.setCurrentScreen(
-                                  AppScreen.onboarding,
+                                  AppScreen.onboardingStep1,
                                 ),
                           ),
                           const SizedBox(height: 10),
