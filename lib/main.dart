@@ -7,11 +7,14 @@ import 'app/savvy_app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final query = _resolveLaunchQuery();
-  final userNamespace = query['user'];
-  final fresh = _toBool(query['fresh']);
+  final userNamespace = query['user']?.trim();
+  final hasUserNamespace = userNamespace != null && userNamespace.isNotEmpty;
+  final forceFreshStart = _toBool(query['fresh']) || !hasUserNamespace;
 
-  final appState = AppState(storage: AppStorage(namespace: userNamespace));
-  await appState.initialize(forceFreshStart: fresh);
+  final appState = AppState(
+    storage: AppStorage(namespace: hasUserNamespace ? userNamespace : null),
+  );
+  await appState.initialize(forceFreshStart: forceFreshStart);
   runApp(SavvyApp(appState: appState));
 }
 
