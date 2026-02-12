@@ -19,9 +19,7 @@ class DashboardScreen extends StatelessWidget {
     final taxResult = appState.taxResult;
     if (taxResult == null) {
       return const Scaffold(
-        body: PageBackground(
-          child: Center(child: CircularProgressIndicator()),
-        ),
+        body: PageBackground(child: Center(child: CircularProgressIndicator())),
       );
     }
 
@@ -31,7 +29,8 @@ class DashboardScreen extends StatelessWidget {
         title: '신용/체크카드',
         description: '카드 사용에 따른 소득공제',
         icon: Icons.credit_card,
-        currentValue: appState.taxData.cardUsage.creditCard +
+        currentValue:
+            appState.taxData.cardUsage.creditCard +
             appState.taxData.cardUsage.debitCard +
             appState.taxData.cardUsage.cashReceipt,
         estimatedDeduction: taxResult.taxDeductions.cardUsage,
@@ -42,7 +41,9 @@ class DashboardScreen extends StatelessWidget {
         title: '연금저축',
         description: '노후준비 + 세액공제',
         icon: Icons.savings,
-        currentValue: appState.taxData.pension.pensionSavings + appState.taxData.pension.irp,
+        currentValue:
+            appState.taxData.pension.pensionSavings +
+            appState.taxData.pension.irp,
         estimatedDeduction: taxResult.taxDeductions.pension,
         categoryLabel: '세액공제',
       ),
@@ -51,7 +52,8 @@ class DashboardScreen extends StatelessWidget {
         title: '기부금',
         description: '종교/정치/일반 기부금',
         icon: Icons.favorite_border,
-        currentValue: appState.taxData.donations.religious +
+        currentValue:
+            appState.taxData.donations.religious +
             appState.taxData.donations.political +
             appState.taxData.donations.general,
         estimatedDeduction: taxResult.taxDeductions.religiousDonation,
@@ -107,9 +109,8 @@ class DashboardScreen extends StatelessWidget {
                               children: <Widget>[
                                 Text(
                                   '예상 환급액',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: AppTheme.textMuted,
-                                      ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(color: AppTheme.textMuted),
                                 ),
                                 const SizedBox(height: 6),
                                 Row(
@@ -117,7 +118,9 @@ class DashboardScreen extends StatelessWidget {
                                   children: <Widget>[
                                     Text(
                                       TaxCalculator.formatCurrency(
-                                        taxResult.refundAmount > 0 ? taxResult.refundAmount : 0,
+                                        taxResult.refundAmount > 0
+                                            ? taxResult.refundAmount
+                                            : 0,
                                       ),
                                       style: Theme.of(context)
                                           .textTheme
@@ -129,15 +132,16 @@ class DashboardScreen extends StatelessWidget {
                                       taxResult.refundAmount > 0
                                           ? Icons.trending_up
                                           : Icons.trending_down,
-                                      color: taxResult.refundAmount > 0
-                                          ? AppTheme.success
-                                          : AppTheme.danger,
+                                      color:
+                                          taxResult.refundAmount > 0
+                                              ? AppTheme.success
+                                              : AppTheme.danger,
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  '현재 입력 기준 · ${appState.userProfile.currentMonth}월',
+                                  '급여 수령 ${appState.userProfile.currentMonth}개월 기준',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                                 if (taxResult.smeReduction > 0) ...<Widget>[
@@ -151,10 +155,12 @@ class DashboardScreen extends StatelessWidget {
                                     ),
                                     child: Text(
                                       '중소기업 감면 적용 중: ${TaxCalculator.formatCurrency(taxResult.smeReduction)}',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: AppTheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                       textAlign: TextAlign.center,
                                     ),
                                   ),
@@ -163,82 +169,114 @@ class DashboardScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          Text('절세 항목', style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            '절세 항목',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 10),
                           LayoutBuilder(
-                            builder: (BuildContext context, BoxConstraints constraints) {
-                              final columns = constraints.maxWidth >= 980
-                                  ? 3
-                                  : (constraints.maxWidth >= 640 ? 2 : 1);
+                            builder: (
+                              BuildContext context,
+                              BoxConstraints constraints,
+                            ) {
+                              final columns =
+                                  constraints.maxWidth >= 980
+                                      ? 3
+                                      : (constraints.maxWidth >= 640 ? 2 : 1);
                               return GridView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: taxItems.length,
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: columns,
-                                  mainAxisSpacing: 12,
-                                  crossAxisSpacing: 12,
-                                  childAspectRatio: 1.58,
-                                ),
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: columns,
+                                      mainAxisSpacing: 12,
+                                      crossAxisSpacing: 12,
+                                      childAspectRatio: 1.58,
+                                    ),
                                 itemBuilder: (BuildContext context, int index) {
                                   final item = taxItems[index];
                                   return AppCard(
                                     onTap: () => _openItem(context, item.id),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: <Widget>[
                                         Container(
                                           width: 44,
                                           height: 44,
                                           decoration: BoxDecoration(
                                             color: AppTheme.primaryLight,
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
-                                          child: Icon(item.icon, color: AppTheme.primary),
+                                          child: Icon(
+                                            item.icon,
+                                            color: AppTheme.primary,
+                                          ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: <Widget>[
                                               Text(
                                                 item.title,
-                                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                                      fontWeight: FontWeight.w700,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodyMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.w700,
                                                     ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 item.description,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(color: AppTheme.textMuted),
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall?.copyWith(
+                                                  color: AppTheme.textMuted,
+                                                ),
                                               ),
                                               const Spacer(),
                                               if (item.id != 'sme')
                                                 Text(
                                                   '현재 ${TaxCalculator.formatMillions(item.currentValue)}',
-                                                  style: Theme.of(context).textTheme.bodySmall,
+                                                  style:
+                                                      Theme.of(
+                                                        context,
+                                                      ).textTheme.bodySmall,
                                                 ),
                                               const SizedBox(height: 2),
                                               Text.rich(
                                                 TextSpan(
-                                                  text: TaxCalculator.formatCurrency(item.estimatedDeduction),
+                                                  text:
+                                                      TaxCalculator.formatCurrency(
+                                                        item.estimatedDeduction,
+                                                      ),
                                                   style: Theme.of(context)
                                                       .textTheme
                                                       .bodyMedium
                                                       ?.copyWith(
                                                         color: AppTheme.primary,
-                                                        fontWeight: FontWeight.w700,
+                                                        fontWeight:
+                                                            FontWeight.w700,
                                                       ),
                                                   children: <InlineSpan>[
                                                     TextSpan(
-                                                      text: ' ${item.categoryLabel}',
+                                                      text:
+                                                          ' ${item.categoryLabel}',
                                                       style: Theme.of(context)
                                                           .textTheme
                                                           .bodySmall
-                                                          ?.copyWith(color: AppTheme.textMuted),
+                                                          ?.copyWith(
+                                                            color:
+                                                                AppTheme
+                                                                    .textMuted,
+                                                          ),
                                                     ),
                                                   ],
                                                 ),
@@ -256,7 +294,9 @@ class DashboardScreen extends StatelessWidget {
                           const SizedBox(height: 14),
                           AppButton(
                             fullWidth: true,
-                            onPressed: () => appState.setCurrentScreen(AppScreen.report),
+                            onPressed:
+                                () =>
+                                    appState.setCurrentScreen(AppScreen.report),
                             child: const Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: <Widget>[
@@ -311,7 +351,12 @@ class _DashboardNav extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: <Widget>[
-                Text('Savvy', style: Theme.of(context).textTheme.titleLarge?.copyWith(color: AppTheme.primary)),
+                Text(
+                  'Savvy',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(color: AppTheme.primary),
+                ),
                 const Spacer(),
                 _NavItem(
                   label: '대시보드',
@@ -331,7 +376,10 @@ class _DashboardNav extends StatelessWidget {
                 IconButton(
                   onPressed: () => onTap(AppScreen.myPage),
                   icon: const Icon(Icons.person_outline),
-                  color: current == AppScreen.myPage ? AppTheme.primary : AppTheme.textMuted,
+                  color:
+                      current == AppScreen.myPage
+                          ? AppTheme.primary
+                          : AppTheme.textMuted,
                 ),
               ],
             ),

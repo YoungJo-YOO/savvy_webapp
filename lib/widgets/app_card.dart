@@ -17,6 +17,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final card = Container(
+      width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
         color: Colors.white,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:savvy_webapp/screens/card_analysis_screen.dart';
+import 'package:savvy_webapp/screens/dashboard_screen.dart';
+import 'package:savvy_webapp/screens/landing_screen.dart';
+import 'package:savvy_webapp/screens/my_page_screen.dart';
+import 'package:savvy_webapp/screens/onboarding_screen.dart';
+import 'package:savvy_webapp/screens/report_screen.dart';
 
-import '../screens/card_analysis_screen.dart';
-import '../screens/dashboard_screen.dart';
-import '../screens/landing_screen.dart';
-import '../screens/my_page_screen.dart';
-import '../screens/onboarding_screen.dart';
-import '../screens/report_screen.dart';
 import '../widgets/page_background.dart';
 import 'app_screen.dart';
 import 'app_state.dart';
