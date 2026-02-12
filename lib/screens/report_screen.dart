@@ -1,8 +1,4 @@
-import 'dart:typed_data';
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 
 import '../app/app_screen.dart';
@@ -24,31 +20,6 @@ class ReportScreen extends StatefulWidget {
 }
 
 class _ReportScreenState extends State<ReportScreen> {
-  final GlobalKey _pdfCaptureKey = GlobalKey();
-
-  Future<_CapturedReport?> _captureReportImage() async {
-    await WidgetsBinding.instance.endOfFrame;
-    final captureContext = _pdfCaptureKey.currentContext;
-    final captureSize = captureContext?.size;
-    final boundary =
-        captureContext?.findRenderObject() as RenderRepaintBoundary?;
-    if (captureContext == null || captureSize == null || boundary == null) {
-      return null;
-    }
-
-    final pixelRatio =
-        ui.PlatformDispatcher.instance.views.first.devicePixelRatio * 2;
-    final image = await boundary.toImage(pixelRatio: pixelRatio);
-    final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    if (bytes == null) return null;
-
-    return _CapturedReport(
-      bytes: bytes.buffer.asUint8List(),
-      logicalWidth: captureSize.width,
-      logicalHeight: captureSize.height,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final result = widget.appState.taxResult;
@@ -147,14 +118,10 @@ class _ReportScreenState extends State<ReportScreen> {
                     () => widget.appState.setCurrentScreen(AppScreen.dashboard),
                 onDownload: () async {
                   try {
-                    final captured = await _captureReportImage();
-                    if (captured == null) {
-                      throw StateError('failed to capture report');
-                    }
-                    await ReportPdfService.downloadCapturedReport(
-                      imageBytes: captured.bytes,
-                      logicalWidth: captured.logicalWidth,
-                      logicalHeight: captured.logicalHeight,
+                    await ReportPdfService.downloadReport(
+                      profile: widget.appState.userProfile,
+                      taxData: widget.appState.taxData,
+                      result: result,
                     );
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -174,13 +141,11 @@ class _ReportScreenState extends State<ReportScreen> {
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20),
                   child: Center(
-                    child: RepaintBoundary(
-                      key: _pdfCaptureKey,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 920),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 920),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
                             AppCard(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -503,8 +468,7 @@ class _ReportScreenState extends State<ReportScreen> {
                                 ),
                               ],
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
@@ -580,18 +544,6 @@ class _ReportScreenState extends State<ReportScreen> {
       ),
     );
   }
-}
-
-class _CapturedReport {
-  const _CapturedReport({
-    required this.bytes,
-    required this.logicalWidth,
-    required this.logicalHeight,
-  });
-
-  final Uint8List bytes;
-  final double logicalWidth;
-  final double logicalHeight;
 }
 
 class _ReportHeader extends StatelessWidget {

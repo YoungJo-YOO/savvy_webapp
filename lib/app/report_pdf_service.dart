@@ -73,19 +73,20 @@ class ReportPdfService {
     final generatedAt = DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now());
     final effectiveAnnualIncome = TaxCalculator.totalAnnualIncome(profile);
     final finalSettlementTax = result.finalTax - result.prepaidTax;
+    final theme = await _buildKoreanTheme();
     final summaryLabel =
         result.refundAmount >= 0
-            ? 'Estimated Refund'
-            : 'Estimated Additional Payment';
+            ? '예상 환급액'
+            : '예상 추가 납부액';
 
     String formatMoney(double amount) {
       final sign = amount < 0 ? '-' : '';
-      return '${sign}KRW ${number.format(amount.abs().round())}';
+      return '$sign${number.format(amount.abs().round())}원';
     }
 
     final deductionRows = <_ReportRow>[
       _ReportRow(
-        name: 'Credit/Check Card',
+        name: '신용/체크카드',
         amount:
             taxData.cardUsage.creditCard +
             taxData.cardUsage.debitCard +
@@ -93,7 +94,7 @@ class ReportPdfService {
         deduction: result.taxDeductions.cardUsage,
       ),
       _ReportRow(
-        name: 'Housing Subscription / Rent',
+        name: '주택청약/월세',
         amount:
             taxData.housing.housingSubscription + taxData.housing.monthlyRent,
         deduction: result.taxDeductions.housingSubscription,
@@ -102,12 +103,12 @@ class ReportPdfService {
 
     final taxCreditRows = <_ReportRow>[
       _ReportRow(
-        name: 'Pension Savings / IRP',
+        name: '연금저축/IRP',
         amount: taxData.pension.pensionSavings + taxData.pension.irp,
         deduction: result.taxDeductions.pension,
       ),
       _ReportRow(
-        name: 'Donation',
+        name: '기부금',
         amount:
             taxData.donations.religious +
             taxData.donations.political +
@@ -115,7 +116,7 @@ class ReportPdfService {
         deduction: result.taxDeductions.religiousDonation,
       ),
       _ReportRow(
-        name: 'Medical / Education',
+        name: '의료비/교육비',
         amount:
             taxData.medicalEducation.medical +
             taxData.medicalEducation.education,
@@ -126,7 +127,7 @@ class ReportPdfService {
     final taxReductionRows = <_ReportRow>[
       if (result.smeReduction > 0)
         _ReportRow(
-          name: 'SME Youth Reduction',
+          name: '중소기업 청년 감면',
           amount: 0,
           deduction: result.smeReduction,
         ),
@@ -134,19 +135,20 @@ class ReportPdfService {
 
     document.addPage(
       pw.MultiPage(
+        theme: theme,
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(28),
         build:
             (pw.Context context) => <pw.Widget>[
               pw.Text(
-                'Savvy Year-End Tax Report',
+                'Savvy 연말정산 리포트',
                 style: pw.TextStyle(
                   fontSize: 21,
                   fontWeight: pw.FontWeight.bold,
                 ),
               ),
               pw.SizedBox(height: 6),
-              pw.Text('Generated: $generatedAt'),
+              pw.Text('생성일: $generatedAt'),
               pw.SizedBox(height: 14),
               pw.Container(
                 width: double.infinity,
@@ -179,27 +181,27 @@ class ReportPdfService {
               ),
               pw.SizedBox(height: 14),
               _buildSection(
-                title: 'Deduction Details',
+                title: '소득공제 상세',
                 rows: deductionRows,
                 formatMoney: formatMoney,
               ),
               pw.SizedBox(height: 10),
               _buildSection(
-                title: 'Tax Credit Details',
+                title: '세액공제 상세',
                 rows: taxCreditRows,
                 formatMoney: formatMoney,
               ),
               if (taxReductionRows.isNotEmpty) ...<pw.Widget>[
                 pw.SizedBox(height: 10),
                 _buildSection(
-                  title: 'Tax Reduction Details',
+                  title: '세액감면 상세',
                   rows: taxReductionRows,
                   formatMoney: formatMoney,
                 ),
               ],
               pw.SizedBox(height: 12),
               pw.Text(
-                'Tax Calculation',
+                '세금 계산 과정',
                 style: pw.TextStyle(
                   fontSize: 14,
                   fontWeight: pw.FontWeight.bold,
@@ -208,33 +210,33 @@ class ReportPdfService {
               pw.SizedBox(height: 8),
               _calcLine(
                 profile.isFirstJobThisYear
-                    ? 'Total Income'
-                    : 'Total Income (Current + Previous)',
+                    ? '총급여'
+                    : '총급여(현+전 직장 합산)',
                 effectiveAnnualIncome,
                 formatMoney,
               ),
-              _calcLine('Taxable Income', result.taxableIncome, formatMoney),
-              _calcLine('Calculated Tax', result.calculatedTax, formatMoney),
+              _calcLine('과세표준', result.taxableIncome, formatMoney),
+              _calcLine('산출세액', result.calculatedTax, formatMoney),
               if (result.smeReduction > 0)
                 _calcLine(
-                  'SME Youth Reduction',
+                  '중소기업 청년 감면',
                   -result.smeReduction,
                   formatMoney,
                 ),
               _calcLine(
-                'Tax Credits Total',
+                '세액공제 합계',
                 -result.taxDeductions.total,
                 formatMoney,
               ),
-              _calcLine('Determined Tax', result.finalTax, formatMoney),
+              _calcLine('결정세액', result.finalTax, formatMoney),
               _calcLine(
-                'Prepaid Tax (Estimated)',
+                '기납부세액(추정)',
                 -result.prepaidTax,
                 formatMoney,
               ),
               pw.Divider(color: PdfColors.grey400),
               _calcLine(
-                'Final Tax',
+                '최종 세액',
                 finalSettlementTax,
                 formatMoney,
                 emphasized: true,
@@ -274,7 +276,7 @@ class ReportPdfService {
                       pw.Text(row.name),
                       if (row.amount > 0)
                         pw.Text(
-                          'Paid: ${formatMoney(row.amount)}',
+                          '납입액: ${formatMoney(row.amount)}',
                           style: const pw.TextStyle(
                             color: PdfColors.grey700,
                             fontSize: 10,
@@ -315,6 +317,16 @@ class ReportPdfService {
         ],
       ),
     );
+  }
+
+  static Future<pw.ThemeData?> _buildKoreanTheme() async {
+    try {
+      final base = await PdfGoogleFonts.notoSansKRRegular();
+      final bold = await PdfGoogleFonts.notoSansKRBold();
+      return pw.ThemeData.withFont(base: base, bold: bold);
+    } catch (_) {
+      return null;
+    }
   }
 }
 
