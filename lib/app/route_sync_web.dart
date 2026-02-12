@@ -15,10 +15,13 @@ class _WebAppRouteSync implements AppRouteSync {
   @override
   AppScreen? readInitialScreen() {
     // Preferred: path-based route (/dashboard, /report, ...)
+    // but for root path (/) we should still allow hash route (#/dashboard).
     final path = (html.window.location.pathname ?? '').trim();
     final normalizedPath = _normalizeRoutePath(path);
-    final fromPath = _screenFromRoute(normalizedPath);
-    if (fromPath != null) return fromPath;
+    if (normalizedPath.isNotEmpty) {
+      final fromPath = _screenFromRoute(normalizedPath);
+      if (fromPath != null) return fromPath;
+    }
 
     // Backward compatibility: hash-based route (#/dashboard)
     final hash = html.window.location.hash;
@@ -28,6 +31,10 @@ class _WebAppRouteSync implements AppRouteSync {
       final normalizedHashPath = _normalizeRoutePath(routePath);
       final fromHash = _screenFromRoute(normalizedHashPath);
       if (fromHash != null) return fromHash;
+    }
+
+    if (normalizedPath.isEmpty) {
+      return AppScreen.landing;
     }
 
     return null;
@@ -93,7 +100,6 @@ class _WebAppRouteSync implements AppRouteSync {
 
   AppScreen? _screenFromRoute(String route) {
     switch (route) {
-      case '':
       case 'landing':
         return AppScreen.landing;
       case 'onboarding/1':
