@@ -4,6 +4,7 @@ Firebase Hosting 배포 이력을 기록합니다.
 
 | Deployed At (KST) | Commit | Project | URL | Notes |
 |---|---|---|---|---|
+| 2026-02-12 17:13:42 +09:00 | `6a4dfb6` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 브라우저 뒤로/앞으로 시 URL-화면 상태 동기화 안정화 및 히스토리 흐름 개선 |
 | 2026-02-12 17:04:38 +09:00 | `b49d573` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | `/landing` 진입 시 완전 초기 상태로 시작하고 CTA도 새 온보딩으로 시작하도록 반영 |
 | 2026-02-12 16:57:33 +09:00 | `95b1d5b` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 온보딩 단계별 URL/내비게이션 개선 버전 재배포 |
 | 2026-02-12 16:46:26 +09:00 | `d219ab9` | `savvy-webapp-youngjo` | https://savvy-webapp-youngjo.web.app | 해시 URL에서 경로 기반 URL(`/dashboard` 등)로 전환, 브라우저 뒤/앞으로 연동 강화 |
