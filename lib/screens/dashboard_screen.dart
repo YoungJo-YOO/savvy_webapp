@@ -22,6 +22,10 @@ class DashboardScreen extends StatelessWidget {
         body: PageBackground(child: Center(child: CircularProgressIndicator())),
       );
     }
+    final refundAmount = taxResult.refundAmount;
+    final isRefund = refundAmount >= 0;
+    final summaryLabel = isRefund ? '예상 환급액' : '예상 추가 납부액';
+    final summaryColor = isRefund ? AppTheme.success : AppTheme.danger;
 
     final taxItems = <_TaxItem>[
       _TaxItem(
@@ -62,11 +66,24 @@ class DashboardScreen extends StatelessWidget {
       _TaxItem(
         id: 'housing',
         title: '주택청약',
-        description: '무주택 세대주 소득공제',
+        description: '주택청약/월세 주거 공제',
         icon: Icons.home_outlined,
-        currentValue: appState.taxData.housing.housingSubscription,
+        currentValue:
+            appState.taxData.housing.housingSubscription +
+            appState.taxData.housing.monthlyRent,
         estimatedDeduction: taxResult.taxDeductions.housingSubscription,
         categoryLabel: '소득공제',
+      ),
+      _TaxItem(
+        id: 'medical_education',
+        title: '의료비/교육비',
+        description: '특별세액공제 항목',
+        icon: Icons.medical_information_outlined,
+        currentValue:
+            appState.taxData.medicalEducation.medical +
+            appState.taxData.medicalEducation.education,
+        estimatedDeduction: taxResult.taxDeductions.medicalEducationTaxCredit,
+        categoryLabel: '세액공제',
       ),
     ];
 
@@ -108,7 +125,7 @@ class DashboardScreen extends StatelessWidget {
                             child: Column(
                               children: <Widget>[
                                 Text(
-                                  '예상 환급액',
+                                  summaryLabel,
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(color: AppTheme.textMuted),
                                 ),
@@ -118,24 +135,19 @@ class DashboardScreen extends StatelessWidget {
                                   children: <Widget>[
                                     Text(
                                       TaxCalculator.formatCurrency(
-                                        taxResult.refundAmount > 0
-                                            ? taxResult.refundAmount
-                                            : 0,
+                                        refundAmount.abs(),
                                       ),
                                       style: Theme.of(context)
                                           .textTheme
                                           .headlineMedium
-                                          ?.copyWith(color: AppTheme.primary),
+                                          ?.copyWith(color: summaryColor),
                                     ),
                                     const SizedBox(width: 10),
                                     Icon(
-                                      taxResult.refundAmount > 0
+                                      isRefund
                                           ? Icons.trending_up
                                           : Icons.trending_down,
-                                      color:
-                                          taxResult.refundAmount > 0
-                                              ? AppTheme.success
-                                              : AppTheme.danger,
+                                      color: summaryColor,
                                     ),
                                   ],
                                 ),
@@ -144,6 +156,15 @@ class DashboardScreen extends StatelessWidget {
                                   '급여 수령 ${appState.userProfile.currentMonth}개월 기준',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
+                                if (taxResult.finalTax <= 0) ...<Widget>[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '결정세액이 0원 이하로 계산되었습니다.',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: AppTheme.textMuted),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                                 if (taxResult.smeReduction > 0) ...<Widget>[
                                   const SizedBox(height: 10),
                                   Container(

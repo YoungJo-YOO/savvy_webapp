@@ -21,7 +21,8 @@ class CardAnalysisScreen extends StatelessWidget {
     final profile = appState.userProfile;
     final usage = appState.taxData.cardUsage;
     final totalUsage = usage.creditCard + usage.debitCard + usage.cashReceipt;
-    final minUsage = profile.annualIncome * 0.25;
+    final effectiveAnnualIncome = TaxCalculator.totalAnnualIncome(profile);
+    final minUsage = effectiveAnnualIncome * 0.25;
     final progress = totalUsage / math.max(minUsage, 1.0);
 
     final remainingMonths = math.max(0, 12 - DateTime.now().month);

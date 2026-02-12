@@ -33,28 +33,46 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
   late final TextEditingController _politicalController;
   late final TextEditingController _generalController;
   late final TextEditingController _housingController;
+  late final TextEditingController _medicalController;
+  late final TextEditingController _educationController;
 
   @override
   void initState() {
     super.initState();
     final taxData = widget.appState.taxData;
-    _creditCardController =
-        TextEditingController(text: _toManwonString(taxData.cardUsage.creditCard));
-    _debitCardController =
-        TextEditingController(text: _toManwonString(taxData.cardUsage.debitCard));
-    _cashController =
-        TextEditingController(text: _toManwonString(taxData.cardUsage.cashReceipt));
-    _pensionController =
-        TextEditingController(text: _toManwonString(taxData.pension.pensionSavings));
-    _irpController = TextEditingController(text: _toManwonString(taxData.pension.irp));
-    _religiousController =
-        TextEditingController(text: _toManwonString(taxData.donations.religious));
-    _politicalController =
-        TextEditingController(text: _toManwonString(taxData.donations.political));
-    _generalController =
-        TextEditingController(text: _toManwonString(taxData.donations.general));
-    _housingController =
-        TextEditingController(text: _toManwonString(taxData.housing.housingSubscription));
+    _creditCardController = TextEditingController(
+      text: _toManwonString(taxData.cardUsage.creditCard),
+    );
+    _debitCardController = TextEditingController(
+      text: _toManwonString(taxData.cardUsage.debitCard),
+    );
+    _cashController = TextEditingController(
+      text: _toManwonString(taxData.cardUsage.cashReceipt),
+    );
+    _pensionController = TextEditingController(
+      text: _toManwonString(taxData.pension.pensionSavings),
+    );
+    _irpController = TextEditingController(
+      text: _toManwonString(taxData.pension.irp),
+    );
+    _religiousController = TextEditingController(
+      text: _toManwonString(taxData.donations.religious),
+    );
+    _politicalController = TextEditingController(
+      text: _toManwonString(taxData.donations.political),
+    );
+    _generalController = TextEditingController(
+      text: _toManwonString(taxData.donations.general),
+    );
+    _housingController = TextEditingController(
+      text: _toManwonString(taxData.housing.housingSubscription),
+    );
+    _medicalController = TextEditingController(
+      text: _toManwonString(taxData.medicalEducation.medical),
+    );
+    _educationController = TextEditingController(
+      text: _toManwonString(taxData.medicalEducation.education),
+    );
   }
 
   @override
@@ -68,6 +86,8 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
     _politicalController.dispose();
     _generalController.dispose();
     _housingController.dispose();
+    _medicalController.dispose();
+    _educationController.dispose();
     super.dispose();
   }
 
@@ -92,9 +112,9 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
                 const SizedBox(height: 8),
                 Text(
                   '만 15~34세 청년이 중소기업에 취업한 경우 5년 동안 소득세 90% 감면이 자동 반영됩니다.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppTheme.textMuted,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
                 ),
                 const SizedBox(height: 16),
                 Container(
@@ -153,9 +173,7 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Expanded(
-                child: SingleChildScrollView(
-                  child: _buildEditorBody(context),
-                ),
+                child: SingleChildScrollView(child: _buildEditorBody(context)),
               ),
               const SizedBox(height: 16),
               Container(
@@ -170,7 +188,10 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    const Text('예상 공제액', style: TextStyle(color: Colors.white70)),
+                    const Text(
+                      '예상 공제액',
+                      style: TextStyle(color: Colors.white70),
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       TaxCalculator.formatCurrency(estimated),
@@ -217,14 +238,16 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
       'pension' => _buildPensionEditor(context),
       'donation' => _buildDonationEditor(context),
       'housing' => _buildHousingEditor(context),
+      'medical_education' => _buildMedicalEducationEditor(context),
       _ => const SizedBox.shrink(),
     };
   }
 
   Widget _buildCardEditor(BuildContext context) {
-    final income = widget.appState.userProfile.annualIncome;
+    final income = TaxCalculator.totalAnnualIncome(widget.appState.userProfile);
     final minimum = income * 0.25;
-    final total = _won(_creditCardController) +
+    final total =
+        _won(_creditCardController) +
         _won(_debitCardController) +
         _won(_cashController);
     final progress = total / math.max(minimum, 1);
@@ -236,18 +259,21 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
         const SizedBox(height: 8),
         Text(
           '총급여의 25%를 초과한 사용금액에 대해 공제를 받을 수 있습니다.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
         ),
         const SizedBox(height: 14),
         AppProgressBar(
           current: total,
           total: minimum,
           label: '공제 최소 충족',
-          tone: progress >= 1
-              ? ProgressTone.success
-              : (progress >= 0.5 ? ProgressTone.warning : ProgressTone.danger),
+          tone:
+              progress >= 1
+                  ? ProgressTone.success
+                  : (progress >= 0.5
+                      ? ProgressTone.warning
+                      : ProgressTone.danger),
         ),
         const SizedBox(height: 8),
         Text(
@@ -283,7 +309,9 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
   }
 
   Widget _buildPensionEditor(BuildContext context) {
-    final annualIncome = widget.appState.userProfile.annualIncome;
+    final annualIncome = TaxCalculator.totalAnnualIncome(
+      widget.appState.userProfile,
+    );
     final rate = annualIncome <= 55000000 ? 16.5 : 13.2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -292,9 +320,9 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
         const SizedBox(height: 8),
         Text(
           '연금저축과 IRP를 합산해 최대 700만원까지 세액공제를 받을 수 있습니다.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
         ),
         const SizedBox(height: 16),
         LabeledInput(
@@ -324,9 +352,9 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
         const SizedBox(height: 8),
         Text(
           '기부금은 1,000만원 이하 15%, 초과분 30% 공제율이 적용됩니다.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
         ),
         const SizedBox(height: 16),
         LabeledInput(
@@ -363,9 +391,9 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
         const SizedBox(height: 8),
         Text(
           '무주택 세대주는 연간 240만원 한도로 40% 소득공제를 받을 수 있습니다.',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textMuted,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
         ),
         const SizedBox(height: 16),
         LabeledInput(
@@ -379,28 +407,67 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
     );
   }
 
+  Widget _buildMedicalEducationEditor(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('의료비/교육비 세액공제', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        Text(
+          '의료비는 총급여 3% 초과분의 15%, 교육비는 15% 세액공제로 계산됩니다.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
+        ),
+        const SizedBox(height: 16),
+        LabeledInput(
+          label: '의료비',
+          controller: _medicalController,
+          suffixText: '만원',
+          helperText: '총급여 3% 초과분에 대해 15%',
+          onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(height: 12),
+        LabeledInput(
+          label: '교육비',
+          controller: _educationController,
+          suffixText: '만원',
+          helperText: '세액공제율 15%',
+          onChanged: (_) => setState(() {}),
+        ),
+      ],
+    );
+  }
+
   double _estimatedDeduction() {
     final profile = widget.appState.userProfile;
+    final effectiveAnnualIncome = TaxCalculator.totalAnnualIncome(profile);
     return switch (widget.itemId) {
       'card' => TaxCalculator.calculateCardDeduction(
-          profile.annualIncome,
-          _won(_creditCardController),
-          _won(_debitCardController),
-          _won(_cashController),
-        ),
+        effectiveAnnualIncome,
+        _won(_creditCardController),
+        _won(_debitCardController),
+        _won(_cashController),
+      ),
       'pension' => TaxCalculator.calculatePensionTaxCredit(
-          profile.annualIncome,
-          _won(_pensionController),
-          _won(_irpController),
-        ),
+        effectiveAnnualIncome,
+        _won(_pensionController),
+        _won(_irpController),
+      ),
       'donation' => TaxCalculator.calculateDonationTaxCredit(
-          _won(_religiousController),
-          _won(_politicalController),
-          _won(_generalController),
-        ),
+        _won(_religiousController),
+        _won(_politicalController),
+        _won(_generalController),
+      ),
       'housing' => TaxCalculator.calculateHousingDeduction(
-          _won(_housingController),
-        ),
+        _won(_housingController),
+        annualMonthlyRent: widget.appState.taxData.housing.monthlyRent,
+      ),
+      'medical_education' => TaxCalculator.calculateMedicalEducationTaxCredit(
+        effectiveAnnualIncome,
+        _won(_medicalController),
+        _won(_educationController),
+      ),
       _ => 0,
     };
   }
@@ -438,6 +505,14 @@ class _TaxItemEditorDialogState extends State<TaxItemEditorDialog> {
         widget.appState.updateTaxData(
           housing: taxData.housing.copyWith(
             housingSubscription: _won(_housingController),
+          ),
+        );
+        break;
+      case 'medical_education':
+        widget.appState.updateTaxData(
+          medicalEducation: taxData.medicalEducation.copyWith(
+            medical: _won(_medicalController),
+            education: _won(_educationController),
           ),
         );
         break;

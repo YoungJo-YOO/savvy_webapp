@@ -17,7 +17,13 @@ class MyPageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final profile = appState.userProfile;
     final situations = profile.specialSituations;
+    final effectiveAnnualIncome = TaxCalculator.totalAnnualIncome(profile);
+    final profileSummary =
+        profile.isFirstJobThisYear
+            ? '${profile.age}세 · 연봉 ${TaxCalculator.formatMillions(profile.annualIncome)}'
+            : '${profile.age}세 · 합산 총급여 ${TaxCalculator.formatMillions(effectiveAnnualIncome)}';
     final tags = <String>[
+      if (!profile.isFirstJobThisYear) '연도 내 이직(전 직장 소득 합산)',
       if (situations.isSMEYouthTaxReduction) '중소기업 청년 소득세 감면',
       if (situations.hasReligiousDonation) '종교단체 기부금 납부',
       if (situations.hasRent) '월세 납부',
@@ -77,7 +83,7 @@ class MyPageScreen extends StatelessWidget {
                                                 ).textTheme.titleLarge,
                                           ),
                                           Text(
-                                            '${profile.age}세 · 연봉 ${TaxCalculator.formatMillions(profile.annualIncome)}',
+                                            profileSummary,
                                             style: Theme.of(
                                               context,
                                             ).textTheme.bodyMedium?.copyWith(
@@ -101,7 +107,10 @@ class MyPageScreen extends StatelessWidget {
                                     const SizedBox(width: 10),
                                     Expanded(
                                       child: _MetricCard(
-                                        label: '급여 수령 개월',
+                                        label:
+                                            profile.isFirstJobThisYear
+                                                ? '급여 수령 개월'
+                                                : '현재 회사 급여 수령',
                                         value: '${profile.currentMonth}개월',
                                       ),
                                     ),

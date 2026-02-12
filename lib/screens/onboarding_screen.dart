@@ -26,12 +26,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   late int _annualIncomeManwon;
   late int _dependents;
   late bool _isMidYearJoiner;
+  late bool _isFirstJobThisYear;
   late int _employmentStartMonth;
+  late int _previousCompanyIncomeManwon;
+  late int _previousCompanyPrepaidTaxManwon;
   late List<bool> _salaryPaidMonths;
   late SpecialSituations _specialSituations;
 
   late final TextEditingController _ageController;
   late final TextEditingController _incomeController;
+  late final TextEditingController _previousIncomeController;
+  late final TextEditingController _previousPrepaidTaxController;
   late final TextEditingController _religiousDonationController;
   late final TextEditingController _rentController;
 
@@ -39,33 +44,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     final profile = widget.appState.userProfile;
-    _age = profile.age;
-    _annualIncomeManwon = (profile.annualIncome / 10000).round();
-    _dependents = profile.dependents;
-    _specialSituations = profile.specialSituations;
+    final isEditMode = widget.appState.onboardingComplete;
 
-    final paidMonths = profile.currentMonth.clamp(0, 12);
-    _isMidYearJoiner = paidMonths < 12;
-    _employmentStartMonth =
-        _isMidYearJoiner ? (13 - paidMonths).clamp(1, 12) : 1;
-    _salaryPaidMonths = List<bool>.generate(
-      12,
-      (index) =>
-          !_isMidYearJoiner ? true : index >= (_employmentStartMonth - 1),
+    _age = isEditMode ? profile.age : 0;
+    _annualIncomeManwon =
+        isEditMode ? (profile.annualIncome / 10000).round() : 0;
+    _dependents = isEditMode ? profile.dependents : 0;
+    _isFirstJobThisYear = isEditMode ? profile.isFirstJobThisYear : true;
+    _previousCompanyIncomeManwon =
+        isEditMode ? (profile.previousCompanyIncome / 10000).round() : 0;
+    _previousCompanyPrepaidTaxManwon =
+        isEditMode ? (profile.previousCompanyPrepaidTax / 10000).round() : 0;
+    _specialSituations =
+        isEditMode ? profile.specialSituations : SpecialSituations.defaults();
+
+    if (isEditMode) {
+      final paidMonths = profile.currentMonth.clamp(0, 12);
+      _isMidYearJoiner = paidMonths < 12;
+      _employmentStartMonth =
+          _isMidYearJoiner ? (13 - paidMonths).clamp(1, 12) : 1;
+      _salaryPaidMonths = List<bool>.generate(
+        12,
+        (index) =>
+            !_isMidYearJoiner ? true : index >= (_employmentStartMonth - 1),
+      );
+    } else {
+      _isMidYearJoiner = false;
+      _employmentStartMonth = DateTime.now().month;
+      _salaryPaidMonths = List<bool>.filled(12, true);
+    }
+
+    _ageController = TextEditingController(
+      text: _age > 0 ? _age.toString() : '',
     );
-
-    _ageController = TextEditingController(text: _age.toString());
     _incomeController = TextEditingController(
-      text: _annualIncomeManwon.toString(),
+      text: _annualIncomeManwon > 0 ? _annualIncomeManwon.toString() : '',
+    );
+    _previousIncomeController = TextEditingController(
+      text:
+          _previousCompanyIncomeManwon > 0
+              ? _previousCompanyIncomeManwon.toString()
+              : '',
+    );
+    _previousPrepaidTaxController = TextEditingController(
+      text:
+          _previousCompanyPrepaidTaxManwon > 0
+              ? _previousCompanyPrepaidTaxManwon.toString()
+              : '',
     );
     _religiousDonationController = TextEditingController(
       text:
-          ((_specialSituations.monthlyReligiousDonation ?? 0) / 10000)
-              .round()
-              .toString(),
+          ((_specialSituations.monthlyReligiousDonation ?? 0) / 10000) > 0
+              ? ((_specialSituations.monthlyReligiousDonation ?? 0) / 10000)
+                  .round()
+                  .toString()
+              : '',
     );
     _rentController = TextEditingController(
-      text: ((_specialSituations.monthlyRent ?? 0) / 10000).round().toString(),
+      text:
+          ((_specialSituations.monthlyRent ?? 0) / 10000) > 0
+              ? ((_specialSituations.monthlyRent ?? 0) / 10000)
+                  .round()
+                  .toString()
+              : '',
     );
   }
 
@@ -73,6 +114,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void dispose() {
     _ageController.dispose();
     _incomeController.dispose();
+    _previousIncomeController.dispose();
+    _previousPrepaidTaxController.dispose();
     _religiousDonationController.dispose();
     _rentController.dispose();
     super.dispose();
@@ -181,7 +224,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           label: '연봉 (총급여)',
           controller: _incomeController,
           suffixText: '만원',
-          helperText: '세전 총급여 기준으로 입력해 주세요.',
+          helperText: '현재 회사 연봉 기준으로 입력되며, 급여 수령 개월 수로 자동 환산됩니다.',
           onChanged: (value) => _annualIncomeManwon = int.tryParse(value) ?? 0,
         ),
         const SizedBox(height: 12),
@@ -239,6 +282,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 _applyEmploymentStartMonth(_employmentStartMonth);
               } else {
                 _salaryPaidMonths = List<bool>.filled(12, true);
+                _isFirstJobThisYear = true;
+                _resetPreviousCompanyInputs();
               }
             });
           },
@@ -284,6 +329,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          Text(
+            '연도 내 회사 이력',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          RadioListTile<bool>(
+            contentPadding: EdgeInsets.zero,
+            value: true,
+            groupValue: _isFirstJobThisYear,
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() {
+                _isFirstJobThisYear = value;
+                _resetPreviousCompanyInputs();
+              });
+            },
+            title: const Text('올해 첫 직장입니다'),
+          ),
+          RadioListTile<bool>(
+            contentPadding: EdgeInsets.zero,
+            value: false,
+            groupValue: _isFirstJobThisYear,
+            onChanged: (value) {
+              if (value == null) return;
+              setState(() => _isFirstJobThisYear = value);
+            },
+            title: const Text('이전 회사에서 이직했습니다'),
+          ),
+          if (!_isFirstJobThisYear) ...<Widget>[
+            const SizedBox(height: 8),
+            LabeledInput(
+              label: '이전 회사 총급여',
+              controller: _previousIncomeController,
+              suffixText: '만원',
+              helperText: '해당 연도 내 이전 직장의 총급여를 입력해 주세요.',
+              onChanged:
+                  (value) =>
+                      _previousCompanyIncomeManwon = int.tryParse(value) ?? 0,
+            ),
+            const SizedBox(height: 12),
+            LabeledInput(
+              label: '이전 회사 기납부세액',
+              controller: _previousPrepaidTaxController,
+              suffixText: '만원',
+              helperText: '원천징수영수증의 기납부세액을 입력해 주세요.',
+              onChanged:
+                  (value) =>
+                      _previousCompanyPrepaidTaxManwon =
+                          int.tryParse(value) ?? 0,
+            ),
+          ],
         ],
         const SizedBox(height: 10),
         Text(
@@ -292,6 +391,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
         ),
+        if (_isMidYearJoiner && !_isFirstJobThisYear)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              '월별 급여 수령 여부는 현재 회사 기준으로 체크해 주세요.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
+            ),
+          ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -368,6 +477,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             label: '월 기부금',
             controller: _religiousDonationController,
             suffixText: '만원',
+            helperText: '입력한 금액은 급여 수령 개월 수 기준으로 연간 환산되어 자동 반영됩니다.',
             onChanged: (value) {
               final manwon = double.tryParse(value) ?? 0;
               _specialSituations = _specialSituations.copyWith(
@@ -394,6 +504,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             label: '월세',
             controller: _rentController,
             suffixText: '만원',
+            helperText: '입력한 금액은 급여 수령 개월 수 기준으로 연간 환산되어 자동 반영됩니다.',
             onChanged: (value) {
               final manwon = double.tryParse(value) ?? 0;
               _specialSituations = _specialSituations.copyWith(
@@ -447,7 +558,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       '신용/체크카드 소득공제',
       '연금저축 세액공제',
       if (_specialSituations.hasReligiousDonation) '종교단체 기부금 세액공제',
-      '주택청약 소득공제',
+      '주택청약/월세 반영',
     ];
 
     return Column(
@@ -597,36 +708,112 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _handleNext() {
-    _age = int.tryParse(_ageController.text) ?? _age;
-    _annualIncomeManwon =
-        int.tryParse(_incomeController.text) ?? _annualIncomeManwon;
+    _age = int.tryParse(_ageController.text.trim()) ?? 0;
+    _annualIncomeManwon = int.tryParse(_incomeController.text.trim()) ?? 0;
+    _previousCompanyIncomeManwon =
+        int.tryParse(_previousIncomeController.text.trim()) ?? 0;
+    _previousCompanyPrepaidTaxManwon =
+        int.tryParse(_previousPrepaidTaxController.text.trim()) ?? 0;
+
+    if (_step == 1) {
+      if (_age <= 0 || _annualIncomeManwon <= 0) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('나이와 연봉은 필수 입력 항목입니다.')));
+        return;
+      }
+      if (_paidSalaryMonthCount == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('최소 1개월 이상 급여 수령 월을 선택해 주세요.')),
+        );
+        return;
+      }
+      if (_isMidYearJoiner &&
+          !_isFirstJobThisYear &&
+          _previousCompanyIncomeManwon <= 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이직한 경우 이전 회사 총급여를 입력해 주세요.')),
+        );
+        return;
+      }
+      if (_isMidYearJoiner &&
+          !_isFirstJobThisYear &&
+          _previousCompanyPrepaidTaxManwon < 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('이전 회사 기납부세액은 0 이상으로 입력해 주세요.')),
+        );
+        return;
+      }
+    }
 
     if (_step < _totalSteps) {
       setState(() => _step += 1);
       return;
     }
 
+    final monthlyReligiousWon =
+        _specialSituations.hasReligiousDonation
+            ? ((double.tryParse(_religiousDonationController.text.trim()) ??
+                    0) *
+                10000)
+            : 0.0;
+    final monthlyRentWon =
+        _specialSituations.hasRent
+            ? ((double.tryParse(_rentController.text.trim()) ?? 0) * 10000)
+            : 0.0;
+    final paidMonths = _paidSalaryMonthCount;
+    final isFirstJobThisYear = _isMidYearJoiner ? _isFirstJobThisYear : true;
+    final previousCompanyIncomeWon =
+        (_isMidYearJoiner && !_isFirstJobThisYear)
+            ? _previousCompanyIncomeManwon * 10000.0
+            : 0.0;
+    final previousCompanyPrepaidTaxWon =
+        (_isMidYearJoiner && !_isFirstJobThisYear)
+            ? _previousCompanyPrepaidTaxManwon * 10000.0
+            : 0.0;
+
     final updatedProfile = widget.appState.userProfile.copyWith(
       age: _age,
       annualIncome: _annualIncomeManwon * 10000,
       dependents: _dependents,
-      currentMonth: _paidSalaryMonthCount,
+      currentMonth: paidMonths,
+      isFirstJobThisYear: isFirstJobThisYear,
+      previousCompanyIncome: previousCompanyIncomeWon,
+      previousCompanyPrepaidTax: previousCompanyPrepaidTaxWon,
       specialSituations: _specialSituations.copyWith(
         monthlyReligiousDonation:
             _specialSituations.hasReligiousDonation
-                ? ((double.tryParse(_religiousDonationController.text) ?? 0) *
-                    10000)
+                ? monthlyReligiousWon
                 : null,
         clearMonthlyReligiousDonation: !_specialSituations.hasReligiousDonation,
-        monthlyRent:
-            _specialSituations.hasRent
-                ? ((double.tryParse(_rentController.text) ?? 0) * 10000)
-                : null,
+        monthlyRent: _specialSituations.hasRent ? monthlyRentWon : null,
         clearMonthlyRent: !_specialSituations.hasRent,
       ),
     );
 
     widget.appState.updateUserProfile(updatedProfile);
+
+    final currentTaxData = widget.appState.taxData;
+    widget.appState.updateTaxData(
+      donations: currentTaxData.donations.copyWith(
+        religious:
+            _specialSituations.hasReligiousDonation
+                ? monthlyReligiousWon * paidMonths
+                : 0,
+      ),
+      housing: currentTaxData.housing.copyWith(
+        monthlyRent:
+            _specialSituations.hasRent ? monthlyRentWon * paidMonths : 0,
+      ),
+    );
+
     widget.appState.setOnboardingComplete(true);
+  }
+
+  void _resetPreviousCompanyInputs() {
+    _previousCompanyIncomeManwon = 0;
+    _previousCompanyPrepaidTaxManwon = 0;
+    _previousIncomeController.clear();
+    _previousPrepaidTaxController.clear();
   }
 }

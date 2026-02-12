@@ -25,8 +25,7 @@ class SpecialSituations {
 
   factory SpecialSituations.fromJson(Map<String, dynamic> json) {
     return SpecialSituations(
-      isSMEYouthTaxReduction:
-          json['isSMEYouthTaxReduction'] as bool? ?? false,
+      isSMEYouthTaxReduction: json['isSMEYouthTaxReduction'] as bool? ?? false,
       hasReligiousDonation: json['hasReligiousDonation'] as bool? ?? false,
       monthlyReligiousDonation:
           (json['monthlyReligiousDonation'] as num?)?.toDouble(),
@@ -72,9 +71,10 @@ class SpecialSituations {
       isSMEYouthTaxReduction:
           isSMEYouthTaxReduction ?? this.isSMEYouthTaxReduction,
       hasReligiousDonation: hasReligiousDonation ?? this.hasReligiousDonation,
-      monthlyReligiousDonation: clearMonthlyReligiousDonation
-          ? null
-          : (monthlyReligiousDonation ?? this.monthlyReligiousDonation),
+      monthlyReligiousDonation:
+          clearMonthlyReligiousDonation
+              ? null
+              : (monthlyReligiousDonation ?? this.monthlyReligiousDonation),
       hasRent: hasRent ?? this.hasRent,
       monthlyRent: clearMonthlyRent ? null : (monthlyRent ?? this.monthlyRent),
       hasChildren: hasChildren ?? this.hasChildren,
@@ -103,6 +103,9 @@ class UserProfile {
     required this.annualIncome,
     required this.dependents,
     required this.currentMonth,
+    required this.isFirstJobThisYear,
+    required this.previousCompanyIncome,
+    required this.previousCompanyPrepaidTax,
     required this.specialSituations,
   });
 
@@ -112,6 +115,9 @@ class UserProfile {
       annualIncome: 42000000,
       dependents: 0,
       currentMonth: DateTime.now().month,
+      isFirstJobThisYear: true,
+      previousCompanyIncome: 0,
+      previousCompanyPrepaidTax: 0,
       specialSituations: SpecialSituations.defaults(),
     );
   }
@@ -122,6 +128,11 @@ class UserProfile {
       annualIncome: (json['annualIncome'] as num?)?.toDouble() ?? 42000000,
       dependents: json['dependents'] as int? ?? 0,
       currentMonth: json['currentMonth'] as int? ?? DateTime.now().month,
+      isFirstJobThisYear: json['isFirstJobThisYear'] as bool? ?? true,
+      previousCompanyIncome:
+          (json['previousCompanyIncome'] as num?)?.toDouble() ?? 0,
+      previousCompanyPrepaidTax:
+          (json['previousCompanyPrepaidTax'] as num?)?.toDouble() ?? 0,
       specialSituations: SpecialSituations.fromJson(
         (json['specialSituations'] as Map?)?.cast<String, dynamic>() ??
             <String, dynamic>{},
@@ -133,6 +144,9 @@ class UserProfile {
   final double annualIncome;
   final int dependents;
   final int currentMonth;
+  final bool isFirstJobThisYear;
+  final double previousCompanyIncome;
+  final double previousCompanyPrepaidTax;
   final SpecialSituations specialSituations;
 
   UserProfile copyWith({
@@ -140,6 +154,9 @@ class UserProfile {
     double? annualIncome,
     int? dependents,
     int? currentMonth,
+    bool? isFirstJobThisYear,
+    double? previousCompanyIncome,
+    double? previousCompanyPrepaidTax,
     SpecialSituations? specialSituations,
   }) {
     return UserProfile(
@@ -147,6 +164,11 @@ class UserProfile {
       annualIncome: annualIncome ?? this.annualIncome,
       dependents: dependents ?? this.dependents,
       currentMonth: currentMonth ?? this.currentMonth,
+      isFirstJobThisYear: isFirstJobThisYear ?? this.isFirstJobThisYear,
+      previousCompanyIncome:
+          previousCompanyIncome ?? this.previousCompanyIncome,
+      previousCompanyPrepaidTax:
+          previousCompanyPrepaidTax ?? this.previousCompanyPrepaidTax,
       specialSituations: specialSituations ?? this.specialSituations,
     );
   }
@@ -157,6 +179,9 @@ class UserProfile {
       'annualIncome': annualIncome,
       'dependents': dependents,
       'currentMonth': currentMonth,
+      'isFirstJobThisYear': isFirstJobThisYear,
+      'previousCompanyIncome': previousCompanyIncome,
+      'previousCompanyPrepaidTax': previousCompanyPrepaidTax,
       'specialSituations': specialSituations.toJson(),
     };
   }
@@ -229,11 +254,7 @@ class Donations {
   final double political;
   final double general;
 
-  Donations copyWith({
-    double? religious,
-    double? political,
-    double? general,
-  }) {
+  Donations copyWith({double? religious, double? political, double? general}) {
     return Donations(
       religious: religious ?? this.religious,
       political: political ?? this.political,
@@ -251,10 +272,7 @@ class Donations {
 }
 
 class Pension {
-  const Pension({
-    required this.pensionSavings,
-    required this.irp,
-  });
+  const Pension({required this.pensionSavings, required this.irp});
 
   factory Pension.defaults() {
     return const Pension(pensionSavings: 0, irp: 0);
@@ -270,10 +288,7 @@ class Pension {
   final double pensionSavings;
   final double irp;
 
-  Pension copyWith({
-    double? pensionSavings,
-    double? irp,
-  }) {
+  Pension copyWith({double? pensionSavings, double? irp}) {
     return Pension(
       pensionSavings: pensionSavings ?? this.pensionSavings,
       irp: irp ?? this.irp,
@@ -281,18 +296,12 @@ class Pension {
   }
 
   Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'pensionSavings': pensionSavings,
-      'irp': irp,
-    };
+    return <String, dynamic>{'pensionSavings': pensionSavings, 'irp': irp};
   }
 }
 
 class Housing {
-  const Housing({
-    required this.housingSubscription,
-    required this.monthlyRent,
-  });
+  const Housing({required this.housingSubscription, required this.monthlyRent});
 
   factory Housing.defaults() {
     return const Housing(housingSubscription: 0, monthlyRent: 0);
@@ -309,10 +318,7 @@ class Housing {
   final double housingSubscription;
   final double monthlyRent;
 
-  Housing copyWith({
-    double? housingSubscription,
-    double? monthlyRent,
-  }) {
+  Housing copyWith({double? housingSubscription, double? monthlyRent}) {
     return Housing(
       housingSubscription: housingSubscription ?? this.housingSubscription,
       monthlyRent: monthlyRent ?? this.monthlyRent,
@@ -327,12 +333,107 @@ class Housing {
   }
 }
 
+class Insurance {
+  const Insurance({
+    required this.autoPayrollInsurance,
+    required this.nationalPension,
+    required this.healthInsurance,
+    required this.employmentInsurance,
+    required this.guaranteedInsurance,
+  });
+
+  factory Insurance.defaults() {
+    return const Insurance(
+      autoPayrollInsurance: true,
+      nationalPension: 0,
+      healthInsurance: 0,
+      employmentInsurance: 0,
+      guaranteedInsurance: 0,
+    );
+  }
+
+  factory Insurance.fromJson(Map<String, dynamic> json) {
+    return Insurance(
+      autoPayrollInsurance: json['autoPayrollInsurance'] as bool? ?? true,
+      nationalPension: (json['nationalPension'] as num?)?.toDouble() ?? 0,
+      healthInsurance: (json['healthInsurance'] as num?)?.toDouble() ?? 0,
+      employmentInsurance:
+          (json['employmentInsurance'] as num?)?.toDouble() ?? 0,
+      guaranteedInsurance:
+          (json['guaranteedInsurance'] as num?)?.toDouble() ?? 0,
+    );
+  }
+
+  final bool autoPayrollInsurance;
+  final double nationalPension;
+  final double healthInsurance;
+  final double employmentInsurance;
+  final double guaranteedInsurance;
+
+  Insurance copyWith({
+    bool? autoPayrollInsurance,
+    double? nationalPension,
+    double? healthInsurance,
+    double? employmentInsurance,
+    double? guaranteedInsurance,
+  }) {
+    return Insurance(
+      autoPayrollInsurance: autoPayrollInsurance ?? this.autoPayrollInsurance,
+      nationalPension: nationalPension ?? this.nationalPension,
+      healthInsurance: healthInsurance ?? this.healthInsurance,
+      employmentInsurance: employmentInsurance ?? this.employmentInsurance,
+      guaranteedInsurance: guaranteedInsurance ?? this.guaranteedInsurance,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'autoPayrollInsurance': autoPayrollInsurance,
+      'nationalPension': nationalPension,
+      'healthInsurance': healthInsurance,
+      'employmentInsurance': employmentInsurance,
+      'guaranteedInsurance': guaranteedInsurance,
+    };
+  }
+}
+
+class MedicalEducation {
+  const MedicalEducation({required this.medical, required this.education});
+
+  factory MedicalEducation.defaults() {
+    return const MedicalEducation(medical: 0, education: 0);
+  }
+
+  factory MedicalEducation.fromJson(Map<String, dynamic> json) {
+    return MedicalEducation(
+      medical: (json['medical'] as num?)?.toDouble() ?? 0,
+      education: (json['education'] as num?)?.toDouble() ?? 0,
+    );
+  }
+
+  final double medical;
+  final double education;
+
+  MedicalEducation copyWith({double? medical, double? education}) {
+    return MedicalEducation(
+      medical: medical ?? this.medical,
+      education: education ?? this.education,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{'medical': medical, 'education': education};
+  }
+}
+
 class TaxDeductionData {
   const TaxDeductionData({
     required this.cardUsage,
     required this.donations,
     required this.pension,
     required this.housing,
+    required this.insurance,
+    required this.medicalEducation,
   });
 
   factory TaxDeductionData.defaults() {
@@ -341,6 +442,8 @@ class TaxDeductionData {
       donations: Donations.defaults(),
       pension: Pension.defaults(),
       housing: Housing.defaults(),
+      insurance: Insurance.defaults(),
+      medicalEducation: MedicalEducation.defaults(),
     );
   }
 
@@ -362,6 +465,14 @@ class TaxDeductionData {
         (json['housing'] as Map?)?.cast<String, dynamic>() ??
             <String, dynamic>{},
       ),
+      insurance: Insurance.fromJson(
+        (json['insurance'] as Map?)?.cast<String, dynamic>() ??
+            <String, dynamic>{},
+      ),
+      medicalEducation: MedicalEducation.fromJson(
+        (json['medicalEducation'] as Map?)?.cast<String, dynamic>() ??
+            <String, dynamic>{},
+      ),
     );
   }
 
@@ -369,18 +480,24 @@ class TaxDeductionData {
   final Donations donations;
   final Pension pension;
   final Housing housing;
+  final Insurance insurance;
+  final MedicalEducation medicalEducation;
 
   TaxDeductionData copyWith({
     CardUsage? cardUsage,
     Donations? donations,
     Pension? pension,
     Housing? housing,
+    Insurance? insurance,
+    MedicalEducation? medicalEducation,
   }) {
     return TaxDeductionData(
       cardUsage: cardUsage ?? this.cardUsage,
       donations: donations ?? this.donations,
       pension: pension ?? this.pension,
       housing: housing ?? this.housing,
+      insurance: insurance ?? this.insurance,
+      medicalEducation: medicalEducation ?? this.medicalEducation,
     );
   }
 
@@ -390,6 +507,8 @@ class TaxDeductionData {
       'donations': donations.toJson(),
       'pension': pension.toJson(),
       'housing': housing.toJson(),
+      'insurance': insurance.toJson(),
+      'medicalEducation': medicalEducation.toJson(),
     };
   }
 }
@@ -400,6 +519,9 @@ class TaxDeductions {
     required this.pension,
     required this.cardUsage,
     required this.housingSubscription,
+    required this.insuranceIncome,
+    required this.insuranceTaxCredit,
+    required this.medicalEducationTaxCredit,
     required this.total,
   });
 
@@ -409,6 +531,9 @@ class TaxDeductions {
       pension: 0,
       cardUsage: 0,
       housingSubscription: 0,
+      insuranceIncome: 0,
+      insuranceTaxCredit: 0,
+      medicalEducationTaxCredit: 0,
       total: 0,
     );
   }
@@ -420,6 +545,10 @@ class TaxDeductions {
       cardUsage: (json['cardUsage'] as num?)?.toDouble() ?? 0,
       housingSubscription:
           (json['housingSubscription'] as num?)?.toDouble() ?? 0,
+      insuranceIncome: (json['insuranceIncome'] as num?)?.toDouble() ?? 0,
+      insuranceTaxCredit: (json['insuranceTaxCredit'] as num?)?.toDouble() ?? 0,
+      medicalEducationTaxCredit:
+          (json['medicalEducationTaxCredit'] as num?)?.toDouble() ?? 0,
       total: (json['total'] as num?)?.toDouble() ?? 0,
     );
   }
@@ -428,6 +557,9 @@ class TaxDeductions {
   final double pension;
   final double cardUsage;
   final double housingSubscription;
+  final double insuranceIncome;
+  final double insuranceTaxCredit;
+  final double medicalEducationTaxCredit;
   final double total;
 
   Map<String, dynamic> toJson() {
@@ -436,6 +568,9 @@ class TaxDeductions {
       'pension': pension,
       'cardUsage': cardUsage,
       'housingSubscription': housingSubscription,
+      'insuranceIncome': insuranceIncome,
+      'insuranceTaxCredit': insuranceTaxCredit,
+      'medicalEducationTaxCredit': medicalEducationTaxCredit,
       'total': total,
     };
   }

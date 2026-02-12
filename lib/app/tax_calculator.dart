@@ -5,6 +5,16 @@ import 'package:intl/intl.dart';
 import 'models.dart';
 
 class TaxCalculator {
+  static double currentCompanyIncome(UserProfile profile) {
+    final paidMonths = profile.currentMonth.clamp(0, 12);
+    return profile.annualIncome * (paidMonths / 12.0);
+  }
+
+  static double totalAnnualIncome(UserProfile profile) {
+    return currentCompanyIncome(profile) +
+        (profile.isFirstJobThisYear ? 0 : profile.previousCompanyIncome);
+  }
+
   static double calculateEarnedIncomeDeduction(double annualIncome) {
     if (annualIncome <= 5000000) {
       return annualIncome * 0.7;
@@ -63,8 +73,10 @@ class TaxCalculator {
   ) {
     final total = pensionSavings + irp;
     const limit = 7000000.0;
-    final effectiveAmount =
-        math.min(total, math.min(limit, pensionSavings + math.min(irp, limit - pensionSavings)));
+    final effectiveAmount = math.min(
+      total,
+      math.min(limit, pensionSavings + math.min(irp, limit - pensionSavings)),
+    );
     final rate = annualIncome <= 55000000 ? 0.165 : 0.132;
     return effectiveAmount * rate;
   }
@@ -92,21 +104,49 @@ class TaxCalculator {
     return credit;
   }
 
-  static double calculateHousingDeduction(double housingSubscription) {
-    const limit = 2400000.0;
-    return math.min(housingSubscription, limit) * 0.4;
+  static double calculateMedicalEducationTaxCredit(
+    double annualIncome,
+    double medical,
+    double education,
+  ) {
+    final medicalThreshold = annualIncome * 0.03;
+    final medicalEligible = math.max(medical - medicalThreshold, 0);
+    final medicalCredit = medicalEligible * 0.15;
+    final educationCredit = math.max(education, 0) * 0.15;
+    return medicalCredit + educationCredit;
+  }
+
+  static double calculateHousingDeduction(
+    double housingSubscription, {
+    double annualMonthlyRent = 0,
+  }) {
+    const subscriptionLimit = 2400000.0;
+    final subscriptionDeduction =
+        math.min(housingSubscription, subscriptionLimit) * 0.4;
+
+    const rentAnnualLimit = 7500000.0;
+    final rentDeduction = math.min(annualMonthlyRent, rentAnnualLimit) * 0.15;
+
+    return subscriptionDeduction + rentDeduction;
   }
 
   static double calculateTaxableIncome(
     double annualIncome,
     int dependents,
     double cardDeduction,
-    double housingDeduction,
-  ) {
+    double housingDeduction, {
+    double additionalIncomeDeduction = 0,
+  }) {
     final earnedIncomeDeduction = calculateEarnedIncomeDeduction(annualIncome);
     final earnedIncome = annualIncome - earnedIncomeDeduction;
+
     final personalDeduction = 1500000 + (dependents * 1500000);
-    final totalDeduction = personalDeduction + cardDeduction + housingDeduction;
+    final totalDeduction =
+        personalDeduction +
+        cardDeduction +
+        housingDeduction +
+        additionalIncomeDeduction;
+
     return math.max(earnedIncome - totalDeduction, 0.0);
   }
 
@@ -132,18 +172,22 @@ class TaxCalculator {
     UserProfile profile,
     TaxDeductionData data,
   ) {
+    final effectiveAnnualIncome = totalAnnualIncome(profile);
+
     final cardDeduction = calculateCardDeduction(
-      profile.annualIncome,
+      effectiveAnnualIncome,
       data.cardUsage.creditCard,
       data.cardUsage.debitCard,
       data.cardUsage.cashReceipt,
     );
 
-    final housingDeduction =
-        calculateHousingDeduction(data.housing.housingSubscription);
+    final housingDeduction = calculateHousingDeduction(
+      data.housing.housingSubscription,
+      annualMonthlyRent: data.housing.monthlyRent,
+    );
 
     final taxableIncome = calculateTaxableIncome(
-      profile.annualIncome,
+      effectiveAnnualIncome,
       profile.dependents,
       cardDeduction,
       housingDeduction,
@@ -158,7 +202,7 @@ class TaxCalculator {
     }
 
     final pensionCredit = calculatePensionTaxCredit(
-      profile.annualIncome,
+      effectiveAnnualIncome,
       data.pension.pensionSavings,
       data.pension.irp,
     );
@@ -168,18 +212,30 @@ class TaxCalculator {
       data.donations.political,
       data.donations.general,
     );
+    final medicalEducationTaxCredit = calculateMedicalEducationTaxCredit(
+      effectiveAnnualIncome,
+      data.medicalEducation.medical,
+      data.medicalEducation.education,
+    );
+    final totalTaxCredit =
+        pensionCredit + donationCredit + medicalEducationTaxCredit;
 
     final taxDeductions = TaxDeductions(
       religiousDonation: donationCredit,
       pension: pensionCredit,
       cardUsage: cardDeduction,
       housingSubscription: housingDeduction,
-      total: pensionCredit + donationCredit,
+      insuranceIncome: 0,
+      insuranceTaxCredit: 0,
+      medicalEducationTaxCredit: medicalEducationTaxCredit,
+      total: totalTaxCredit,
     );
 
-    final finalTax = math.max(calculatedTax - taxDeductions.total, 0.0);
-    final prepaidTax =
-        (profile.annualIncome * 0.05) * (profile.currentMonth / 12.0);
+    final finalTax = calculatedTax - taxDeductions.total;
+    final currentCompanyPrepaidTax = currentCompanyIncome(profile) * 0.05;
+    final previousCompanyPrepaidTax =
+        profile.isFirstJobThisYear ? 0.0 : profile.previousCompanyPrepaidTax;
+    final prepaidTax = currentCompanyPrepaidTax + previousCompanyPrepaidTax;
     final refundAmount = prepaidTax - finalTax;
 
     return TaxCalculationResult(
@@ -193,8 +249,9 @@ class TaxCalculator {
     );
   }
 
-  static final NumberFormat _currencyFormatter =
-      NumberFormat.decimalPattern('ko_KR');
+  static final NumberFormat _currencyFormatter = NumberFormat.decimalPattern(
+    'ko_KR',
+  );
 
   static String formatCurrency(double amount) {
     return '${_currencyFormatter.format(amount.round())}원';

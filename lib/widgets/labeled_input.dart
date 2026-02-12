@@ -10,6 +10,7 @@ class LabeledInput extends StatelessWidget {
     this.hintText,
     this.suffixText,
     this.helperText,
+    this.enabled = true,
     this.keyboardType = TextInputType.number,
     this.onChanged,
   });
@@ -19,6 +20,7 @@ class LabeledInput extends StatelessWidget {
   final String? hintText;
   final String? suffixText;
   final String? helperText;
+  final bool enabled;
   final TextInputType keyboardType;
   final ValueChanged<String>? onChanged;
 
@@ -27,10 +29,16 @@ class LabeledInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text(label, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
+          enabled: enabled,
           keyboardType: keyboardType,
           onChanged: onChanged,
           decoration: InputDecoration(
@@ -42,10 +50,9 @@ class LabeledInput extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             helperText!,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: AppTheme.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: AppTheme.textMuted),
           ),
         ],
       ],

@@ -67,12 +67,16 @@ class AppState extends ChangeNotifier {
     Donations? donations,
     Pension? pension,
     Housing? housing,
+    Insurance? insurance,
+    MedicalEducation? medicalEducation,
   }) {
     _taxData = _taxData.copyWith(
       cardUsage: cardUsage,
       donations: donations,
       pension: pension,
       housing: housing,
+      insurance: insurance,
+      medicalEducation: medicalEducation,
     );
     unawaited(_storage.saveTaxData(_taxData));
     _recalculateIfReady();
