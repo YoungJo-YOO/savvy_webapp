@@ -9,27 +9,45 @@ import 'route_sync.dart';
 class _WebAppRouteSync implements AppRouteSync {
   final List<void Function(AppScreen screen)> _listeners =
       <void Function(AppScreen screen)>[];
+  StreamSubscription<html.PopStateEvent>? _popStateSubscription;
   StreamSubscription<html.Event>? _hashSubscription;
 
   @override
   AppScreen? readInitialScreen() {
+    // Preferred: path-based route (/dashboard, /report, ...)
+    final path = (html.window.location.pathname ?? '').trim();
+    final normalizedPath = _normalizeRoutePath(path);
+    final fromPath = _screenFromRoute(normalizedPath);
+    if (fromPath != null) return fromPath;
+
+    // Backward compatibility: hash-based route (#/dashboard)
     final hash = html.window.location.hash;
-    if (hash.isEmpty) return null;
+    if (hash.isNotEmpty) {
+      final raw = hash.startsWith('#') ? hash.substring(1) : hash;
+      final routePath = raw.split('?').first.trim();
+      final normalizedHashPath = _normalizeRoutePath(routePath);
+      final fromHash = _screenFromRoute(normalizedHashPath);
+      if (fromHash != null) return fromHash;
+    }
 
-    final raw = hash.startsWith('#') ? hash.substring(1) : hash;
-    final routePath = raw.split('?').first.trim();
-    final normalized = routePath.startsWith('/')
-        ? routePath.substring(1)
-        : routePath;
-    if (normalized.isEmpty) return null;
-
-    return _screenFromRoute(normalized);
+    return null;
   }
 
   @override
   void listen(void Function(AppScreen screen) onScreenChanged) {
     _listeners.add(onScreenChanged);
 
+    _popStateSubscription ??= html.window.onPopState.listen((_) {
+      final screen = readInitialScreen();
+      if (screen == null) return;
+      for (final listener in List<void Function(AppScreen screen)>.from(
+        _listeners,
+      )) {
+        listener(screen);
+      }
+    });
+
+    // Legacy hash URL support
     _hashSubscription ??= html.window.onHashChange.listen((_) {
       final screen = readInitialScreen();
       if (screen == null) return;
@@ -43,25 +61,31 @@ class _WebAppRouteSync implements AppRouteSync {
 
   @override
   void updateScreen(AppScreen screen, {bool replace = false}) {
-    final nextHash = '#/${_routeFromScreen(screen)}';
-    if (html.window.location.hash == nextHash) return;
+    final nextPath = '/${_routeFromScreen(screen)}';
+    final currentPath = html.window.location.pathname;
+    final search = html.window.location.search;
 
     if (replace) {
-      final path = html.window.location.pathname;
-      final search = html.window.location.search;
       html.window.history.replaceState(
         null,
         html.document.title,
-        '$path$search$nextHash',
+        '$nextPath$search',
       );
       return;
     }
 
-    html.window.location.hash = '/${_routeFromScreen(screen)}';
+    if (currentPath == nextPath) return;
+    html.window.history.pushState(
+      null,
+      html.document.title,
+      '$nextPath$search',
+    );
   }
 
   @override
   void dispose() {
+    _popStateSubscription?.cancel();
+    _popStateSubscription = null;
     _hashSubscription?.cancel();
     _hashSubscription = null;
     _listeners.clear();
@@ -101,6 +125,18 @@ class _WebAppRouteSync implements AppRouteSync {
       case AppScreen.myPage:
         return 'my-page';
     }
+  }
+
+  String _normalizeRoutePath(String rawPath) {
+    if (rawPath.isEmpty) return '';
+    var path = rawPath.split('?').first.trim();
+    if (path.startsWith('/')) {
+      path = path.substring(1);
+    }
+    if (path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    return path;
   }
 }
 
